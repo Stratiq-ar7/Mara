@@ -1072,7 +1072,6 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
   position:sticky;top:0;z-index:2;background:var(--panel);
   padding:16px 0 10px;margin-bottom:0}
 .rulehead h2{font-size:21px}
-.rulecard #gpitch{color:var(--bone);font-size:15px;margin:0 0 12px}
 .ruleviz{text-align:center;margin:2px 0 16px;padding:14px 10px;background:var(--panel2);
   border:1px solid var(--edge);border-radius:12px}
 .ruleviz .rulediag{width:132px;height:132px;color:#5a544a;display:block;margin:0 auto}
@@ -1473,7 +1472,6 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
           </div>
           <button class="gicon" id="ruleclose" aria-label="Close">×</button>
         </div>
-        <p id="gpitch"></p>
         <div class="rules" id="grules"></div>
         <button class="rulego" id="rulego">Play</button>
       </div>
@@ -2833,6 +2831,7 @@ function isHuman(){return !over&&!busy&&(mode==='hot'||turn===humanSide());}
    block and pages through them one at a time instead of stacking them in
    one long scroll -- keeps the amount of text sitting above the Play
    button small and constant regardless of how many rule points a game has. */
+let currentRulePagerResize=null;
 function setupRulePager(container, humanKey){
   const introItems=[];
   const oneP=container.querySelector('p.one');
@@ -2867,7 +2866,7 @@ function setupRulePager(container, humanKey){
     items.length=0; items.push(...keep, ...later);
   }
   items.unshift(...introItems);
-  if(!items.length) return;
+  if(!items.length){ currentRulePagerResize=null; return; }
   const wrap=document.createElement('div');
   wrap.innerHTML=
     '<div class="rulepage"></div>'
@@ -2893,6 +2892,24 @@ function setupRulePager(container, humanKey){
   prevBtn.onclick=()=>{ if(i>0){ i--; render(); } };
   nextBtn.onclick=()=>{ if(i<items.length-1){ i++; render(); } };
   render();
+  /* the card must not resize as you page through -- a diagram page is much
+     taller than a plain text page. can't measure real heights yet if the
+     popup is still display:none (first-ever game view builds this before
+     openRules shows it), so this gets re-run from openRules once it's
+     actually visible and every dimension is real. */
+  currentRulePagerResize=function(){
+    let maxH=0;
+    for(let k=0;k<items.length;k++){
+      const it=items[k];
+      page.style.minHeight='0';
+      page.innerHTML=it.intro ? it.html
+        : it.numbered ? '<ol class="steps" style="counter-reset:st '+k+'"><li>'+it.html+'</li></ol>'
+        : '<p class="'+it.cls+'">'+it.html+'</p>';
+      maxH=Math.max(maxH, page.scrollHeight);
+    }
+    page.style.minHeight=maxH+'px';
+    render();
+  };
 }
 function openGame(id, wantSide){
   G=GAMES[id];
@@ -2901,7 +2918,6 @@ function openGame(id, wantSide){
   goto('practice');                       // the board lives on the practice page
   $('picker').style.display='none';$('gameview').style.display='';document.body.classList.add('ingame');
   $('gtitle').textContent=G.name;$('gsub').textContent=G.sub;
-  $('gpitch').textContent=G.pitch||'';
   $('grules').innerHTML=G.rules;
   setupRulePager($('grules'), humanSide());
   $('rtitle').textContent=G.name;
@@ -3927,7 +3943,7 @@ document.querySelectorAll('.stinfo').forEach(btn=>{
 /* --- sheet and rules overlay --- */
 function openSheet(){ $('sheetwrap').classList.add('open'); }
 function closeSheet(){ $('sheetwrap').classList.remove('open'); }
-function openRules(){ $('rulewrap').classList.add('open'); $('rulecard').scrollTop=0; }
+function openRules(){ $('rulewrap').classList.add('open'); $('rulecard').scrollTop=0; if(currentRulePagerResize) currentRulePagerResize(); }
 function closeRules(){
   $('rulewrap').classList.remove('open');
   /* the opponent was queued the instant the game loaded, but must not actually
