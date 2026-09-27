@@ -2391,6 +2391,22 @@ function winner(s){
   }
   return 0;
 }
+/* Same exact logic as winner(), just also reporting which condition fired --
+   winner() itself stays untouched since the AI's own scoring depends on its
+   plain LOW/HIGH/0 return, and this is only for the "why did it end" message. */
+function winReason(s){
+  const a=count(s.p,LOW), b=count(s.p,HIGH);
+  if(b<=9-TARGET) return {w:LOW, reason:'material'};
+  if(a<=9-TARGET) return {w:HIGH, reason:'material'};
+  if(moves(s,s.turn).length===0) return {w:s.turn===LOW?HIGH:LOW, reason:'nomoves'};
+  if(s.dry>=PATIENCE){
+    if(a!==b) return {w:a>b?LOW:HIGH, reason:'patience'};
+    const fa=freedom(s,LOW), fb=freedom(s,HIGH);
+    if(fa!==fb) return {w:fa>fb?LOW:HIGH, reason:'patience'};
+    return {w:s.turn===LOW?HIGH:LOW, reason:'patience'};
+  }
+  return {w:0, reason:null};
+}
 /* Material alone makes the AI refuse every trade and shuffle. It needs freedom
    and forward pressure to play for. Deliberately cheap: no move generation. */
 function ev(s,side){
@@ -2437,7 +2453,7 @@ function aiPick(s,side,T,d){
   return r[0].m;
 }
 return{id:"laukatakati",name:"Lau Kata Kati",sub:"Bengal \u00b7 recorded 1952",custom:true,
- LOW,HIGH,TARGET,ADJ,LEAP,LINES,XY,U,init,cp,moves,captures,quiet,mustTake,apply,winner,rank,aiPick,count,
+ LOW,HIGH,TARGET,ADJ,LEAP,LINES,XY,U,init,cp,moves,captures,quiet,mustTake,apply,winner,winReason,rank,aiPick,count,
  sideA:{key:LOW,label:"You start"},sideB:{key:HIGH,label:"They start"},first:LOW,
  pitch:"Every jump is compulsory. Set a trap and your opponent has no choice but to walk into it.",
  hist:"From <b>Lower Bengal</b>, recorded by H.J.R. Murray in 1952 and still cut into the stone at Sheetla Ghat in Varanasi. Also called <b>Nau Keti Keta</b> and Kowwu Dunki. It belongs to the Indian war-game family with Dash-guti and Pretwa, and is the same game as Butterfly in Mozambique, which nobody has fully explained. We play to six captures rather than a wipeout, so a game lasts minutes.",
@@ -2690,8 +2706,8 @@ const LKV={
     if(lg){ lg.style.display=''; lg.innerHTML=this.log.slice().reverse().slice(0,16).map(x=>'<div>'+x+'</div>').join(''); }
     this.st.turn = side===LK.LOW?LK.HIGH:LK.LOW;
     this.busy=false; this.hop=null; this.draw();
-    const w=LK.winner(this.st);
-    if(w){ this.finish(w); return; }
+    const wr=LK.winReason(this.st);
+    if(wr.w){ this.finish(wr.w, wr.reason); return; }
     this.maybeAI();
   },
   tap(i){
@@ -2755,7 +2771,7 @@ const LKV={
       this.play(mv,ai);
     },320);
   },
-  finish(w){
+  finish(w,reason){
     this.ended=true; this.busy=false; this.hop=null; this.sel=null; this.chain=null; this.draw();
     stopStationTimer();
     const s=this.st;
@@ -2772,12 +2788,16 @@ const LKV={
       msg=foe+' win'+(foe==='They'?'':'s')+', '+s.took[w]+' taken to '+s.took[this.mySide()]+'.';
       this.record(false);
     }
+    /* a material or no-legal-move outcome explains itself from the score --
+       the patience rule doesn't, since it can end a level or even 0-0 game,
+       so it's the one case that needs to say so plainly right on the board. */
+    if(reason==='patience') msg += ' Twenty moves, no capture \u2014 the limit decided it.';
     if(this.mode!=='hot') drawAcc();
     $('gstatus').textContent=msg;
     const h=$('lkHint'); if(h) h.innerHTML='<span class="lkar">OVER</span> '+msg;
     if(this.mode!=='hot'){
       const g=LKV.gen;
-      setTimeout(()=>{ if(g===LKV.gen){ if(tableActive) handleTableResult(w===this.mySide()); else showVerdict(w===this.mySide()); } },260);
+      setTimeout(()=>{ if(g===LKV.gen){ if(tableActive) handleTableResult(w===this.mySide(),reason); else showVerdict(w===this.mySide()); } },260);
     }
   },
   record(won){
@@ -3664,27 +3684,31 @@ function launchTableMatch(){
   // close it immediately rather than leaving it stuck open behind the sequence.
   if($('rulewrap').classList.contains('open')) closeRules();
 }
-function handleTableResult(won){
+function handleTableResult(won,reason){
   tableActive=false;
   document.body.classList.remove('tableon');
   Snd.stopTableDrums();
   if(!LIFE.ranked) LIFE.ranked={w:0,l:0,loss:0,moves:0};
   LIFE.ranked[won?'w':'l']++;                 // the Table counts toward the Wall too now
-  if(won){ TABLE_STATE.won=true; tableSave(); showTableWin(); }
-  else { TABLE_STATE.attempts++; tableSave(); showTableLoss(); }
+  if(won){ TABLE_STATE.won=true; tableSave(); showTableWin(reason); }
+  else { TABLE_STATE.attempts++; tableSave(); showTableLoss(reason); }
 }
-function showTableWin(){
+function showTableWin(reason){
+  const byPatience = reason==='patience';
   playKurama(KURAMA_FLEE, {portrait:'dismay', portraitAt:{1:'fleeing'}, askName:false, onDone:()=>{
     showMaraLine('You see me. You have defeated me. The world is yours to conquer.', {autoAdvanceMs:4200, then:()=>{
       $('mltext').textContent='';             // the line fades; the screen holds dark for the pause
       setTimeout(()=>{
-        showMaraTitle('YOU WIN', 'M\u0101ra rises again in Season II.', {button:true, buttonText:'Back to the tree'});
+        showMaraTitle('YOU WIN', byPatience
+          ? 'Twenty moves passed with no capture \u2014 his own patience ran out first. M\u0101ra rises again in Season II.'
+          : 'M\u0101ra rises again in Season II.', {button:true, buttonText:'Back to the tree'});
       }, 5200);
     }});
   }});
 }
-function showTableLoss(){
+function showTableLoss(reason){
   const n = TABLE_STATE.attempts;
+  const byPatience = reason==='patience';
   if(n>=5){
     playKurama(['That\'s the season. You didn\'t have it this time.', 'Back to the roots with you.'],
       {portrait:'neutral', askName:false, onDone:()=>{
@@ -3693,6 +3717,13 @@ function showTableLoss(){
         goto('home');
         openStationCard(7, document.querySelector('.tnode.maranode'));
       }});
+  } else if(byPatience){
+    /* the only outcome that isn't self-explanatory from the score, so it
+       gets its own card rather than folding straight into the retry line. */
+    showMaraTitle('M\u0100RA WINS', 'Twenty moves passed with no capture \u2014 the limit decided it.', {button:true, buttonText:'Go on', onButton:()=>{
+      $('maraline').classList.remove('on');
+      playKurama([KURAMA_TABLE_RETRY[n-1]], {portrait:'neutral', askName:false, onDone:()=>{ leaveGame(); goto('home'); }});
+    }});
   } else {
     playKurama([KURAMA_TABLE_RETRY[n-1]], {portrait:'neutral', askName:false, onDone:()=>{ leaveGame(); goto('home'); }});
   }
