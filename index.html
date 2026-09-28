@@ -2164,17 +2164,24 @@ function kcap(b){const k=king(b);if(!k)return true;const[r,c]=k;
   if(!inB(nr,nc))continue;                  // the board edge does not help attackers
   if(b[nr][nc]===A||isC(nr,nc)||(isT(nr,nc)&&b[nr][nc]===E))n++;}
  return n>=3;}
-function win(b,stm){const k=king(b);if(!k)return A;if(isC(k[0],k[1]))return D;
- /* kcap() was being checked unconditionally, so the king could be "captured"
-    by walking into a surrounded square himself, with neither attacker having
-    just moved. Real tafl doesn't allow that -- a capture has to be sprung by
-    the attacker's own move, the same way you can walk a piece between two
-    enemies in checkers-like games without it being taken. stm is whoever
-    moves NEXT, so the attacker just moved only when stm is the defender. */
- if(stm===D&&kcap(b))return A;
+function win(b,stm,last){const k=king(b);if(!k)return A;if(isC(k[0],k[1]))return D;
+ /* A king walking into a surrounded square is safe -- but being safe on his
+    own move isn't enough. The first version of this rule checked kcap()
+    after ANY attacker move, so once he'd walked in, a move on the far side
+    of the board killed him. A capture has to be closed by the piece that
+    just moved, so that piece must have landed right beside the king.
+    stm is whoever moves NEXT (the attacker just moved when stm is D); last
+    is [row,col] where that move ended. A caller that can't say where the
+    last move ended gets the old check rather than silently never capturing. */
+ if(stm===D&&kcap(b)&&(last===undefined||Math.abs(k[0]-last[0])+Math.abs(k[1]-last[1])===1))return A;
  if(all(b,stm).length===0)return stm===A?D:A;return 0;}
 function cnt(b,s){let n=0;for(const row of b)for(const v of row)if(side(v)===s)n++;return n;}
-function ev(b){const k=king(b);if(!k)return 900;if(isC(k[0],k[1]))return -900;if(kcap(b))return 900;
+function ev(b){const k=king(b);if(!k)return 900;if(isC(k[0],k[1]))return -900;
+ /* no kcap()->900 shortcut here any more: an enclosed king who walked in is
+    not captured until a piece closes the trap, and treating him as already
+    dead made every attacker move look equally winning, so the AI couldn't
+    tell the real closing move from an irrelevant one. win() decides real
+    captures; the hostile-sides term below still ranks near-captures. */
  let s=cnt(b,A)*10-cnt(b,D)*12,best=99;
  for(const[cr,cc]of CO)best=Math.min(best,Math.abs(k[0]-cr)+Math.abs(k[1]-cc));
  /* distance-to-corner alone can't tell "genuinely boxed in" from "far away but
@@ -2196,7 +2203,7 @@ function ev(b){const k=king(b);if(!k)return 900;if(isC(k[0],k[1]))return -900;if
  const mobility=from(b,k[0],k[1]).length;
  return s+best*5+hostile*10-mobility*2;}
 function score(b,mv,s){const nb=clone(b);apply(nb,mv[0],mv[1],mv[2],mv[3]);
- const w=win(nb,s===A?D:A);
+ const w=win(nb,s===A?D:A,[mv[2],mv[3]]);
  if(w===s)return 900;if(w)return -900;
  return s===A?ev(nb):-ev(nb);}
 return{id:"brandubh",name:"Brandubh",sub:"Ireland \u00b7 c. 700 AD",N,E,kcap,king,
@@ -2214,7 +2221,7 @@ return{id:"brandubh",name:"Brandubh",sub:"Ireland \u00b7 c. 700 AD",N,E,kcap,kin
 <li><div class="ruleviz"><svg viewBox="0 0 140 140" class="rulediag"><rect x="6" y="6" width="128" height="128" fill="none" stroke="currentColor" stroke-opacity=".18" stroke-width="1"/><line x1="24.3" y1="6" x2="24.3" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="24.3" x2="134" y2="24.3" stroke="currentColor" stroke-opacity=".14"/><line x1="42.6" y1="6" x2="42.6" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="42.6" x2="134" y2="42.6" stroke="currentColor" stroke-opacity=".14"/><line x1="60.9" y1="6" x2="60.9" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="60.9" x2="134" y2="60.9" stroke="currentColor" stroke-opacity=".14"/><line x1="79.1" y1="6" x2="79.1" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="79.1" x2="134" y2="79.1" stroke="currentColor" stroke-opacity=".14"/><line x1="97.4" y1="6" x2="97.4" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="97.4" x2="134" y2="97.4" stroke="currentColor" stroke-opacity=".14"/><line x1="115.7" y1="6" x2="115.7" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="115.7" x2="134" y2="115.7" stroke="currentColor" stroke-opacity=".14"/><rect x="6.0" y="6.0" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".22"/><rect x="115.7" y="6.0" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".22"/><rect x="6.0" y="115.7" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".22"/><rect x="115.7" y="115.7" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".22"/><rect x="60.9" y="60.9" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".10"/><circle cx="33.4" cy="51.7" r="5.9" fill="var(--ash)"/><circle cx="51.7" cy="51.7" r="5.9" fill="var(--bone)"/><circle cx="70.0" cy="51.7" r="5.9" fill="var(--ash)"/><line x1="45.2" y1="45.2" x2="58.2" y2="58.2" stroke="var(--ember)" stroke-width="2"/><line x1="45.2" y1="58.2" x2="58.2" y2="45.2" stroke="var(--ember)" stroke-width="2"/></svg><p class="vizcap">Two attackers either side of a defender — or two defenders either side of an attacker — removes it. Works the same for both sides.</p></div><b>To capture, sandwich.</b> Get one of your pieces on each side of an enemy, straight across from each other. It has to be YOUR move that closes the trap &mdash; walking yourself between two enemies is completely safe.</li>
 <li data-side="${D}"><div class="ruleviz"><svg viewBox="0 0 168 88" class="rulediag" style="width:auto;max-width:230px;height:88px"><g transform="translate(0,4) scale(0.62)"><rect x="6" y="6" width="128" height="128" fill="none" stroke="currentColor" stroke-opacity=".18" stroke-width="1"/><line x1="24.3" y1="6" x2="24.3" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="24.3" x2="134" y2="24.3" stroke="currentColor" stroke-opacity=".14"/><line x1="42.6" y1="6" x2="42.6" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="42.6" x2="134" y2="42.6" stroke="currentColor" stroke-opacity=".14"/><line x1="60.9" y1="6" x2="60.9" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="60.9" x2="134" y2="60.9" stroke="currentColor" stroke-opacity=".14"/><line x1="79.1" y1="6" x2="79.1" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="79.1" x2="134" y2="79.1" stroke="currentColor" stroke-opacity=".14"/><line x1="97.4" y1="6" x2="97.4" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="97.4" x2="134" y2="97.4" stroke="currentColor" stroke-opacity=".14"/><line x1="115.7" y1="6" x2="115.7" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="115.7" x2="134" y2="115.7" stroke="currentColor" stroke-opacity=".14"/><rect x="6.0" y="6.0" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".22"/><rect x="115.7" y="6.0" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".22"/><rect x="6.0" y="115.7" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".22"/><rect x="115.7" y="115.7" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".22"/><rect x="60.9" y="60.9" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".10"/><circle cx="70.0" cy="33.4" r="5.9" fill="var(--ash)"/><circle cx="51.7" cy="51.7" r="5.9" fill="var(--ash)"/><circle cx="70.0" cy="51.7" r="7.3" fill="var(--bone)" stroke="var(--amber)" stroke-width="2.5"/><circle cx="88.3" cy="51.7" r="5.9" fill="var(--ash)"/><line x1="63.5" y1="45.2" x2="76.5" y2="58.2" stroke="var(--ember)" stroke-width="2"/><line x1="63.5" y1="58.2" x2="76.5" y2="45.2" stroke="var(--ember)" stroke-width="2"/></g><g transform="translate(84,4) scale(0.62)"><rect x="6" y="6" width="128" height="128" fill="none" stroke="currentColor" stroke-opacity=".18" stroke-width="1"/><line x1="24.3" y1="6" x2="24.3" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="24.3" x2="134" y2="24.3" stroke="currentColor" stroke-opacity=".14"/><line x1="42.6" y1="6" x2="42.6" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="42.6" x2="134" y2="42.6" stroke="currentColor" stroke-opacity=".14"/><line x1="60.9" y1="6" x2="60.9" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="60.9" x2="134" y2="60.9" stroke="currentColor" stroke-opacity=".14"/><line x1="79.1" y1="6" x2="79.1" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="79.1" x2="134" y2="79.1" stroke="currentColor" stroke-opacity=".14"/><line x1="97.4" y1="6" x2="97.4" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="97.4" x2="134" y2="97.4" stroke="currentColor" stroke-opacity=".14"/><line x1="115.7" y1="6" x2="115.7" y2="134" stroke="currentColor" stroke-opacity=".14"/><line x1="6" y1="115.7" x2="134" y2="115.7" stroke="currentColor" stroke-opacity=".14"/><rect x="60.9" y="60.9" width="18.3" height="18.3" fill="var(--ember)" fill-opacity=".10"/><circle cx="70.0" cy="33.4" r="5.9" fill="var(--ash)"/><circle cx="70.0" cy="51.7" r="7.3" fill="var(--bone)" stroke="var(--amber)" stroke-width="2.5"/><circle cx="88.3" cy="51.7" r="5.9" fill="var(--ash)"/><line x1="63.5" y1="45.2" x2="76.5" y2="58.2" stroke="var(--ember)" stroke-width="2"/><line x1="63.5" y1="58.2" x2="76.5" y2="45.2" stroke="var(--ember)" stroke-width="2"/></g></svg><p class="vizcap">Left: three real attackers box him in — the ordinary rule. Right: just two attackers, but the empty centre behind him counts as the third side.</p></div><b>A corner or the centre also counts as one "side."</b> So the king only needs two attackers if he is standing next to a corner or the empty centre square.</li>
 <li data-side="${D}"><b>The king alone needs three sides closed</b>, not two, since he is stronger than an ordinary piece.</li>
-<li data-side="${A}"><b>Only an attacker's own move can spring the trap.</b> The king can safely walk into a square between two attackers, or next to the empty centre with one attacker already there &mdash; nothing happens until an attacker actually closes the third side himself.</li>
+<li data-side="${A}"><b>Only an attacker's own move can spring the trap.</b> The king can safely walk into a square between two attackers, or next to the empty centre with one attacker already there &mdash; nothing happens until an attacker moves a piece in beside him and closes the third side. A move on the other side of the board can&rsquo;t do it.</li>
 </ol>
 <p class="win"><b>King reaches any corner</b> &rarr; his side wins. <b>King is surrounded, or his side has no legal move at all</b> &rarr; the hunters win. <b>70 moves pass with no piece taken on either side</b> &rarr; a draw &mdash; nobody broke through.</p>`};
 })();
@@ -2323,7 +2330,7 @@ return{id:"amazons",name:"Amazons",sub:"Argentina \u00b7 1988",get N(){return N}
 
 /* ============ LAU KATA KATI ============ */
 const LK=(()=>{
-const LOW=1,HIGH=2,TARGET=6,PATIENCE=20;
+const LOW=1,HIGH=2,TARGET=6,PATIENCE=35;
 /* Two triangles meeting at one vertex. 19 points, 9 a side, the centre empty.
    Every line below is genuinely collinear with even spacing, which is what makes
    leaping unambiguous. */
@@ -2422,13 +2429,24 @@ function ev(s,side){
   for(const i of [3,9,13]){ if(s.p[i]===side) v+=0.5; else if(s.p[i]===opp) v-=0.5; }
   return v;
 }
+/* Terminal scores are graded, not flat. With a flat +-9000, a position where every
+   line looks lost gave every move the same score and the pick was random, so Mara could
+   hand over two or three pieces when one would do. Now a loss is less bad the later it
+   comes and the more of your pieces are left, and a win is better the sooner it comes.
+   The spread (about +-40) stays far outside anything ev() can reach, so a real
+   terminal always outranks a positional score. */
+function term(s,side,d,won){
+  const opp=side===LOW?HIGH:LOW;
+  const m=(count(s.p,side)-count(s.p,opp))*3;
+  return won ? 9000+d+m : -9000-d+m;
+}
 function search(s,side,d,al,be){
   const a=count(s.p,LOW), b=count(s.p,HIGH);
-  if(b<=9-TARGET) return side===LOW?9000:-9000;
-  if(a<=9-TARGET) return side===HIGH?9000:-9000;
-  if(s.dry>=PATIENCE){ const w=winner(s); return w===side?9000:-9000; }
+  if(b<=9-TARGET) return term(s,side,d,side===LOW);
+  if(a<=9-TARGET) return term(s,side,d,side===HIGH);
+  if(s.dry>=PATIENCE){ const w=winner(s); return term(s,side,d,w===side); }
   const ms=moves(s,s.turn);
-  if(!ms.length) return s.turn===side?-9000:9000;
+  if(!ms.length) return term(s,side,d,s.turn!==side);
   if(d===0) return ev(s,side);
   const mx=s.turn===side; let best=mx?-1e9:1e9;
   for(const m of ms){
@@ -2443,9 +2461,25 @@ function rank(s,side,d){
   return moves(s,side).map(m=>{const ns=cp(s);apply(ns,m);ns.turn=side===LOW?HIGH:LOW;
     return{m,v:search(ns,side,d-1,-1e9,1e9)};}).sort((a,b)=>b.v-a.v);
 }
+/* What the opponent's compulsory reply to this move can take at most, in one turn. */
+function forfeit(s,side,m){
+  const ns=cp(s); apply(ns,m);
+  let worst=0;
+  for(const c of captures(ns,side===LOW?HIGH:LOW)) if(c.caps.length>worst) worst=c.caps.length;
+  return worst;
+}
 function aiPick(s,side,T,d){
   const r=rank(s,side,d); if(!r.length) return null;
-  if(T<=0.001) return shuf(r.filter(x=>x.v>=r[0].v-1e-9))[0].m;
+  if(T<=0.001){
+    /* Among equally good moves, give up the least: take the ones whose compulsory
+       reply costs me the fewest pieces (a single offer, never a chain). */
+    let least=1e9, pool=[];
+    for(const x of r.filter(x=>x.v>=r[0].v-1e-9)){
+      const f=forfeit(s,side,x.m);
+      if(f<least){least=f;pool=[x];} else if(f===least) pool.push(x);
+    }
+    return shuf(pool)[0].m;
+  }
   const hi=r[0].v,lo=r[r.length-1].v,sp=Math.max(1e-6,hi-lo);
   const w=r.map(x=>Math.exp(((x.v-hi)/sp)/T)), tot=w.reduce((a,b)=>a+b,0);
   let x=Math.random()*tot;
@@ -2467,7 +2501,7 @@ return{id:"laukatakati",name:"Lau Kata Kati",sub:"Bengal \u00b7 recorded 1952",c
 <li><b>A jump can chain.</b> If the piece that just landed can immediately jump again, it must keep going. It stops the moment no further jump is available from where it stands. Two or three enemy pieces can disappear in a single turn this way.</li>
 </ol>
 <p class="win"><b>Capture six of their nine pieces</b>, or leave them with no legal move of any kind.</p>
-<p class="win"><b>If 20 moves pass with nobody capturing anything, the game ends right there</b> and picks a winner on the spot: whoever has more pieces left wins. Still tied? Whoever has more open spaces next to their pieces wins. Still tied on that too? Whoever just moved wins.</p>
+<p class="win"><b>If 35 moves pass with nobody capturing anything, the game ends right there</b> and picks a winner on the spot: whoever has more pieces left wins. Still tied? Whoever has more open spaces next to their pieces wins. Still tied on that too? Whoever just moved wins.</p>
 <p class="tip">Because a jump can never be refused, you can deliberately offer a piece: place it so that taking it forces your opponent into a spot where your next jump is already waiting.</p>`};
 })();
 
@@ -2652,7 +2686,7 @@ const LKV={
        that hand-rolling. Every other piece of apply()'s state (captures,
        final position) was faithfully replicated here; this line closes the
        one that wasn't, so a real capture still resets it and a quiet move
-       still counts toward the 20-move limit. */
+       still counts toward the 35-move limit. */
     w.dry = mv.caps.length ? 0 : w.dry+1;
     for(let k=0;k<mv.path.length;k++){
       if(!this.alive(g)) return false;
@@ -2791,7 +2825,7 @@ const LKV={
     /* a material or no-legal-move outcome explains itself from the score --
        the patience rule doesn't, since it can end a level or even 0-0 game,
        so it's the one case that needs to say so plainly right on the board. */
-    if(reason==='patience') msg += ' Twenty moves, no capture \u2014 the limit decided it.';
+    if(reason==='patience') msg += ' Thirty-five moves, no capture \u2014 the limit decided it.';
     if(this.mode!=='hot') drawAcc();
     $('gstatus').textContent=msg;
     const h=$('lkHint'); if(h) h.innerHTML='<span class="lkar">OVER</span> '+msg;
@@ -3028,13 +3062,13 @@ function rank(moves,side){
 function cpS(s){return G.id==='baghchal'?G.cp(s):clone(s);}
 function applyTo(s,mv){
   if(G.id==='brandubh')G.apply(s,mv[0],mv[1],mv[2],mv[3]);else G.apply(s,mv);}
-function winOf(s,stm){return G.id==='baghchal'?G.win(s):G.win(s,stm);}
+function winOf(s,stm,mv){return G.id==='baghchal'?G.win(s):G.id==='brandubh'?G.win(s,stm,[mv[2],mv[3]]):G.win(s,stm);}
 /* 2-ply: my move, minus the opponent's best reply. A 1-ply bot hangs pieces
    constantly — this is what makes the opponent worth playing against. */
 function score2(s,mv,side){
   const ns=cpS(s);applyTo(ns,mv);
   const opp=side===G.sideA.key?G.sideB.key:G.sideA.key;
-  const w=winOf(ns,opp);
+  const w=winOf(ns,opp,mv);
   if(w===side)return 5000;if(w)return -5000;
   const rep=G.all(ns,opp);if(!rep.length)return 5000;
   const cap=G.id==='amazons'?12:26;
@@ -3123,7 +3157,7 @@ function maybeAI(){
         turn = turn===G.sideA.key?G.sideB.key:G.sideA.key;
         render();
         brDry = took.length ? 0 : brDry+1;
-        let w=G.win(st,turn);
+        let w=G.win(st,turn,[mv[2],mv[3]]);
         if(!w && brDry>=BR_PATIENCE) w=DRAW;   // neither side broke through -- a stalemate, not a capture
         if(w===BR.sideA.key && BR.kcap(st)){ kingFall(()=>{busy=false;finish(w);}); return; }
         busy=false;
@@ -3518,7 +3552,7 @@ function tapGrid(r,c){
           turn=turn===BR.sideA.key?BR.sideB.key:BR.sideA.key;
           render();
           brDry = took.length ? 0 : brDry+1;
-          let w=G.win(st,turn);
+          let w=G.win(st,turn,[r,c]);
           if(!w && brDry>=BR_PATIENCE) w=DRAW;   // neither side broke through -- a stalemate, not a capture
           if(w===BR.sideA.key && BR.kcap(st)){ kingFall(()=>{busy=false;finish(w);}); return; }
           busy=false;
@@ -3700,7 +3734,7 @@ function showTableWin(reason){
       $('mltext').textContent='';             // the line fades; the screen holds dark for the pause
       setTimeout(()=>{
         showMaraTitle('YOU WIN', byPatience
-          ? 'Twenty moves passed with no capture \u2014 his own patience ran out first. M\u0101ra rises again in Season II.'
+          ? 'Thirty-five moves passed with no capture \u2014 his own patience ran out first. M\u0101ra rises again in Season II.'
           : 'M\u0101ra rises again in Season II.', {button:true, buttonText:'Back to the tree'});
       }, 5200);
     }});
@@ -3720,7 +3754,7 @@ function showTableLoss(reason){
   } else if(byPatience){
     /* the only outcome that isn't self-explanatory from the score, so it
        gets its own card rather than folding straight into the retry line. */
-    showMaraTitle('M\u0100RA WINS', 'Twenty moves passed with no capture \u2014 the limit decided it.', {button:true, buttonText:'Go on', onButton:()=>{
+    showMaraTitle('M\u0100RA WINS', 'Thirty-five moves passed with no capture \u2014 the limit decided it.', {button:true, buttonText:'Go on', onButton:()=>{
       $('maraline').classList.remove('on');
       playKurama([KURAMA_TABLE_RETRY[n-1]], {portrait:'neutral', askName:false, onDone:()=>{ leaveGame(); goto('home'); }});
     }});
