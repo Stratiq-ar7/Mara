@@ -1,0 +1,14 @@
+# MĀRA
+
+> A free browser game that folds real historical strategy board games into a ranked climb against a mythological opponent.
+
+MĀRA is a single-page web game. Players clear six ranked stations, each a different traditional strategy game against a named AI opponent, then face Māra himself in a hidden finale. Every move is scored against the best available move, building a private "Game IQ" profile across six skills. Free to play, runs in any browser, no download and no account required.
+
+## Games on the ladder
+- Brandubh — Irish tafl, recorded in poetry c. 700 AD. King and four defenders vs. eight attackers on a 7×7 board.
+- Bagh Chal — a Nepalese folk game. Four tigers vs. twenty goats on a 5×5 point board.
+- Amazons — invented in Argentina in 1988. Move-and-burn territory game with no draws.
+- A fourth game, reserved for the finale against Māra, unnamed until reached.
+
+## Pages
+- [MĀRA](https://stratiq-ar7.github.io/Mara/): the game itself — the climb, free practice for the three open games, and a Game IQ profile.
