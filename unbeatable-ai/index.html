@@ -12,6 +12,11 @@
     autocapture: false
   })
   function track(event, props){ try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){} }
+  function trackAndGo(el, event, props){
+    try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){}
+    setTimeout(function(){ location.href = el.href; }, 150);
+    return false;
+  }
 </script>
 <title>Play an Unbeatable AI Online Free — Test Your Game IQ | MĀRA</title>
 <meta name="description" content="Face an AI with zero blunders that searches six moves deep, across four strategy games. Free, no download, no account. See your Game IQ after every match.">
@@ -99,7 +104,7 @@ footer a{color:var(--ash)}
   <p>Brandubh, Bagh Chal and Amazons are free to practice against this AI at five difficulty levels, from forgiving to Ultimate. Clear all six stations on the ranked ladder and a fourth game, kept hidden until then, waits at the top — played only against Māra himself.</p>
 
 
-  <a class="cta" href="../" onclick="track('landing_cta_click',{page:'unbeatable-ai'})">Play Free &rarr;</a>
+  <a class="cta" href="../" onclick="return trackAndGo(this,'landing_cta_click',{page:'unbeatable-ai'})">Play Free &rarr;</a>
   <p class="note">No download. No account. Runs in your browser.</p>
 
   <div class="card">

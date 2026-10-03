@@ -12,6 +12,11 @@
     autocapture: false
   })
   function track(event, props){ try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){} }
+  function trackAndGo(el, event, props){
+    try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){}
+    setTimeout(function(){ location.href = el.href; }, 150);
+    return false;
+  }
 </script>
 <title>Play Bagh Chal Online Free — Tigers vs Goats AI | MĀRA</title>
 <meta name="description" content="Play Bagh Chal, the Nepalese tigers-and-goats folk game, free in your browser against an AI. No download, no account.">
@@ -101,7 +106,7 @@ footer a{color:var(--ash)}
     <strong style="color:var(--bone);font-size:14px">Every move, scored</strong>
     <p style="margin-top:8px;margin-bottom:0">Whatever you play here counts toward your Game IQ — a private score built from how your moves compare to the best one actually available, not just whether you won. <a href="../unbeatable-ai/" style="color:var(--amber)">See how hard the AI really is →</a></p>
   </div>
-  <a class="cta" href="../" onclick="track('landing_cta_click',{page:'bagh-chal'})">Play Bagh Chal Free &rarr;</a>
+  <a class="cta" href="../" onclick="return trackAndGo(this,'landing_cta_click',{page:'bagh-chal'})">Play Bagh Chal Free &rarr;</a>
   <p class="note">No download. No account. Runs in your browser.</p>
 
   <div class="card">

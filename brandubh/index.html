@@ -12,6 +12,11 @@
     autocapture: false
   })
   function track(event, props){ try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){} }
+  function trackAndGo(el, event, props){
+    try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){}
+    setTimeout(function(){ location.href = el.href; }, 150);
+    return false;
+  }
 </script>
 <title>Play Brandubh Online Free — Irish Tafl vs AI | MĀRA</title>
 <meta name="description" content="Play Brandubh, the Irish tafl game from c. 700 AD, free in your browser. One king, four defenders, eight attackers. No download, no account.">
@@ -102,7 +107,7 @@ footer a{color:var(--ash)}
     <strong style="color:var(--bone);font-size:14px">Every move, scored</strong>
     <p style="margin-top:8px;margin-bottom:0">Whatever you play here counts toward your Game IQ — a private score built from how your moves compare to the best one actually available, not just whether you won. <a href="../unbeatable-ai/" style="color:var(--amber)">See how hard the AI really is →</a></p>
   </div>
-  <a class="cta" href="../" onclick="track('landing_cta_click',{page:'brandubh'})">Play Brandubh Free &rarr;</a>
+  <a class="cta" href="../" onclick="return trackAndGo(this,'landing_cta_click',{page:'brandubh'})">Play Brandubh Free &rarr;</a>
   <p class="note">No download. No account. Runs in your browser.</p>
 
   <div class="card">
