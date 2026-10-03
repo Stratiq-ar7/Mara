@@ -1633,7 +1633,7 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
 
 <script>/* ---------- PostHog event taxonomy: one helper, nine call sites ---------- */
 function track(event, props){ try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){} }
-track('app_loaded', {referrer: document.referrer||null});
+setTimeout(()=>track('app_loaded', {referrer: document.referrer||null}), 50);
 
 
 /* ============ the clerk ============ ======================================
