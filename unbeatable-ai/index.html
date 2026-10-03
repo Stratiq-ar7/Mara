@@ -3,6 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.uid.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_Bgzym4zzwxJEDJpD7S5QFz6yAV9uhkJdRTamSud5wnY8', {
+    api_host: 'https://eu.i.posthog.com',
+    defaults: '2026-05-30',
+    person_profiles: 'identified_only',
+    autocapture: false
+  })
+  function track(event, props){ try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){} }
+</script>
 <title>Play an Unbeatable AI Online Free — Test Your Game IQ | MĀRA</title>
 <meta name="description" content="Face an AI with zero blunders that searches six moves deep, across four strategy games. Free, no download, no account. See your Game IQ after every match.">
 <link rel="canonical" href="https://stratiq-ar7.github.io/Mara/unbeatable-ai/">
@@ -89,7 +99,7 @@ footer a{color:var(--ash)}
   <p>Brandubh, Bagh Chal and Amazons are free to practice against this AI at five difficulty levels, from forgiving to Ultimate. Clear all six stations on the ranked ladder and a fourth game, kept hidden until then, waits at the top — played only against Māra himself.</p>
 
 
-  <a class="cta" href="../">Play Free &rarr;</a>
+  <a class="cta" href="../" onclick="track('landing_cta_click',{page:'unbeatable-ai'})">Play Free &rarr;</a>
   <p class="note">No download. No account. Runs in your browser.</p>
 
   <div class="card">
@@ -103,5 +113,6 @@ footer a{color:var(--ash)}
 
   <footer>Part of <a href="../">MĀRA — A Mythological Strategy Game Ladder</a></footer>
 </div>
+<script>track('landing_page_view', {page:'unbeatable-ai'});</script>
 </body>
 </html>
