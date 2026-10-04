@@ -15,9 +15,11 @@
   function trackAndGo(el, event, props){
     const merged = Object.assign({button_label: el.textContent.trim(), url: location.href}, props||{});
     try{ if(window.posthog) window.posthog.capture(event, merged); }catch(e){}
-    setTimeout(function(){ location.href = el.href; }, 150);
+    setTimeout(function(){ location.href = ctaDest(el); }, 150);
     return false;
   }
+  /* carry the visitor's utm_* / campaign tags across the Play hop, so the source survives into the game */
+  function ctaDest(el){ var base = el.href.split('?')[0]; return location.search ? base + location.search : el.href; }
 </script>
 <title>Play an Unbeatable AI Online Free — Test Your Game IQ | MĀRA</title>
 <meta name="description" content="Face an AI with zero blunders that searches six moves deep, across four strategy games. Free, no download, no account. See your Game IQ after every match.">

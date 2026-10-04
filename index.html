@@ -9,7 +9,12 @@
     api_host: 'https://eu.i.posthog.com',
     defaults: '2026-05-30',
     person_profiles: 'identified_only',
-    autocapture: false
+    autocapture: false,
+    session_recording: {
+      /* replay stays on, but the IQ / accuracy surfaces are never recorded (blocked, and text-masked as a backstop) */
+      blockSelector: '#p-table, #whoami, #lb-acc, #sacc, #saccd, .acc, .lastmv',
+      maskTextSelector: '#p-table, #whoami, #lb-acc, #sacc, #saccd, .acc, .lastmv'
+    }
   })
 </script>
 <title>MĀRA — A Mythological Strategy Game Ladder</title>
