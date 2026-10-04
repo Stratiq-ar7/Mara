@@ -13,7 +13,8 @@
   })
   function track(event, props){ try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){} }
   function trackAndGo(el, event, props){
-    try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){}
+    const merged = Object.assign({button_label: el.textContent.trim(), url: location.href}, props||{});
+    try{ if(window.posthog) window.posthog.capture(event, merged); }catch(e){}
     setTimeout(function(){ location.href = el.href; }, 150);
     return false;
   }
@@ -118,6 +119,6 @@ footer a{color:var(--ash)}
 
   <footer>Part of <a href="../">MĀRA — A Mythological Strategy Game Ladder</a></footer>
 </div>
-<script>setTimeout(()=>track('landing_page_view', {page:'unbeatable-ai'}), 50);</script>
+<script>setTimeout(()=>track('landing_page_view', {page:'unbeatable-ai', url:location.href}), 50);</script>
 </body>
 </html>

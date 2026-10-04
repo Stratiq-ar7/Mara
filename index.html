@@ -1633,7 +1633,12 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
 
 <script>/* ---------- PostHog event taxonomy: one helper, nine call sites ---------- */
 function track(event, props){ try{ if(window.posthog) window.posthog.capture(event, props||{}); }catch(e){} }
-setTimeout(()=>track('app_loaded', {referrer: document.referrer||null}), 50);
+const TAB_LABELS = {home:'Māra', practice:'Practice', table:'IQ'};
+let __curTabKey = 'home';
+setTimeout(()=>{
+  track('app_loaded', {referrer: document.referrer||null});
+  track('tab_viewed', {tab_key:'home', tab_label:TAB_LABELS.home, from_tab:null});
+}, 50);
 
 
 /* ============ the clerk ============ ======================================
@@ -4167,16 +4172,18 @@ function toTop(){
 function goto(p){
   /* ranked games run on the practice page, but they belong to Mara -
      keep the nav pointing where the player thinks they are */
-  const __prevPage = document.querySelector('.page.on');
-  const __fromTab = __prevPage ? __prevPage.id.replace('p-','') : null;
-  if(__fromTab !== p) track('tab_switched', {from_tab:__fromTab, to_tab:p});
   const lit = (p==='practice' && ladderStation) ? 'home' : p;
+  if(__curTabKey !== lit){
+    track('tab_viewed', {tab_key:lit, tab_label:TAB_LABELS[lit], from_tab:__curTabKey});
+    __curTabKey = lit;
+  }
   document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.p===lit));
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
   $('p-'+p).classList.add('on');
   toTop();
 }
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{
+  track('nav_click', {button_key:b.dataset.p, button_label:b.textContent.trim()});
   goto(b.dataset.p);
   if(b.dataset.p==='practice'){ paintPractice(); paintSkills(); }
   if(b.dataset.p==='table'){ paintGameIQ(); paintSkills(); }
