@@ -4356,37 +4356,46 @@ async function prepareCard(){
   }catch(e){}
 }
 
+/* copy text without ever throwing; resolves true or false */
+function copyText(t){
+  return (async function(){
+    try{ await navigator.clipboard.writeText(t); return true; }catch(e){}
+    try{ const ta=document.createElement('textarea'); ta.value=t; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+         document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,ta.value.length); const ok=!!document.execCommand('copy'); ta.remove(); return ok; }catch(e){ return false; }
+  })();
+}
+
 async function shareResult(){
   const c=__shareCtx; if(!c) return;
   const useIQ=iqWanted();
+  const copyP=copyText(c.url);                    /* starts inside the tap: the link is on the clipboard too, for apps that drop an image's caption */
   if(!__cardFile || __cardKey.charAt(0)!==(useIQ?'1':'0')) await prepareCard();
+  const linkCopied=await copyP;
   const file=__cardFile, caption=shareCaption(c), msg=$('v-sharemsg');
   const canNative=!!(file && navigator.canShare && navigator.canShare({files:[file]}));
   const method=canNative?'native':(file?'download':'copy');
-  /* analytics records that the box was ticked, never the number itself */
-  track('share_clicked', {kind:c.kind, station_number:c.station, method:method, includes_iq:useIQ, share_ref:c.ref});
+  /* analytics records that the IQ box was ticked, never the number */
+  const props={kind:c.kind, station_number:c.station, method:method, includes_iq:useIQ, link_copied:linkCopied, share_ref:c.ref};
+  track('share_image_clicked', props);
+  if(msg) msg.textContent = linkCopied ? 'Link copied too. Paste it with your image if your app drops the caption.' : '';
   if(canNative){
-    try{ await navigator.share({files:[file], text:caption}); return; }
-    catch(e){ if(e && e.name==='AbortError') return; }
+    try{ await navigator.share({files:[file], text:caption}); track('share_image_completed', props); return; }
+    catch(e){ if(e && e.name==='AbortError'){ track('share_image_cancelled', props); return; } }
   }
   if(file){
     try{ const a=document.createElement('a'), u=URL.createObjectURL(file); a.href=u; a.download='mara-result.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(u);},4000); }catch(e){}
   }
-  let copied=false; try{ await navigator.clipboard.writeText(caption); copied=true; }catch(e){}
+  const copied=await copyText(caption);
   if(msg) msg.textContent = file ? (copied?'Image saved. Caption and link copied.':'Image saved. Link: '+c.url)
                                  : (copied?'Caption and link copied.':'Link: '+c.url);
+  track('share_image_completed', props);
 }
 
-/* copy just the link: for apps that drop an image's caption (Instagram, Facebook), the player can paste it themselves */
+/* the explicit "Copy link" button: just the link, for pasting into a bio, story sticker or comment */
 async function copyShareLink(){
   const c=__shareCtx; if(!c) return; const msg=$('v-sharemsg');
-  track('share_clicked', {kind:c.kind, station_number:c.station, method:'copy_link', includes_iq:false, share_ref:c.ref});
-  let ok=false;
-  try{ await navigator.clipboard.writeText(c.url); ok=true; }catch(e){}
-  if(!ok){
-    try{ const ta=document.createElement('textarea'); ta.value=c.url; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
-         document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,ta.value.length); ok=!!document.execCommand('copy'); ta.remove(); }catch(e){}
-  }
+  const ok=await copyText(c.url);
+  track('share_link_clicked', {kind:c.kind, station_number:c.station, copied:ok, share_ref:c.ref});
   if(msg) msg.textContent = ok ? 'Link copied. Paste it anywhere.' : 'Copy this link: '+c.url;
 }
 function iqTip(open){
