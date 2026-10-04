@@ -383,7 +383,7 @@ tbody tr.me{box-shadow:inset 2px 0 0 var(--amber)}
 
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .stat{background:var(--panel);border:1px solid var(--edge);border-radius:11px;padding:13px}
-.stat .k{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ash)}
+.stat .k{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ash)}
 .stat .v{font-family:ui-serif,Palatino,Georgia,serif;font-size:27px;line-height:1.15;margin-top:2px;color:var(--ember)}
 .stat .d{font-size:12px;color:var(--ash)}
 
@@ -750,7 +750,7 @@ body.ranked .gfoot .spacer{flex:1}
 .pdetails{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
 @media (max-width:460px){.pdetails{grid-template-columns:1fr}}
 .pbox{background:var(--panel);border:1px solid var(--edge);border-radius:11px;padding:11px 13px}
-.pbox .k{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ash);margin-bottom:5px}
+.pbox .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ash);margin-bottom:5px}
 .pbox p{margin:0;font-size:12.5px;line-height:1.55;color:#D6CFC2}
 .pbox.how p{font-family:ui-serif,Palatino,Georgia,serif;font-style:italic;font-size:13px;color:#E4DACB}
 .difftier{display:flex;gap:5px;margin-top:8px}
@@ -881,7 +881,7 @@ body.ranked .gfoot .spacer{flex:1}
 .tcard.defeated .howto, .tcard.defeated .vs,
 .tcard.victorious .howto, .tcard.victorious .vs{display:none}
 .tcard .howto{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,122,26,.18)}
-.tcard .howto .k{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+.tcard .howto .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--ash);margin-bottom:5px}
 .tcard .howto p{margin:0;font-family:ui-serif,Palatino,Georgia,serif;font-style:italic;
   font-size:13.5px;line-height:1.5;color:#E4DACB}
@@ -1190,7 +1190,7 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
 .lkscore{display:flex;gap:9px;margin-top:10px}
 .lks{flex:1;background:var(--panel);border:1px solid var(--edge);border-radius:11px;padding:10px 13px}
 .lks.lead{border-color:var(--ember)}
-.lks .k{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ash)}
+.lks .k{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ash)}
 .lks .v{font-family:ui-serif,Palatino,Georgia,serif;font-size:25px;line-height:1.1;color:var(--bone)}
 .lks.them .v{color:#B98A4E}
 .lks .d{font-size:11px;color:var(--ash)}
@@ -1255,6 +1255,30 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
   .grid,.bcb,.lkboard{max-width:min(100%,72svh)}
   .gamegrid{display:grid;grid-template-columns:1fr 260px;gap:12px;align-items:start}
 }
+
+/* share a result */
+.verdict .vshare{margin-top:14px;text-align:left;animation:vsay .5s .66s both ease}
+.verdict .vshare[hidden]{display:none}
+.verdict .vsharerow{display:flex;gap:8px}
+.verdict #v-sharebtn,.verdict #v-copybtn{min-height:48px;touch-action:manipulation;border-radius:10px;font-size:14px;font-weight:600;background:none;border:1px solid var(--edge);color:var(--bone);-webkit-text-fill-color:currentColor;cursor:pointer}
+.verdict #v-sharebtn{flex:1;min-width:0}
+.verdict #v-copybtn{flex:0 0 auto;padding:0 16px;color:var(--amber)}
+.verdict #v-sharebtn:hover,.verdict #v-copybtn:hover{border-color:rgba(255,122,26,.55)}
+.verdict .viq{display:flex;align-items:center;gap:2px;margin-top:6px;font-size:13px;color:var(--ash)}
+.verdict .viq label{display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-height:44px}
+.verdict .viq input{accent-color:var(--ember);width:22px;height:22px;margin:0;flex:none}
+.verdict .viq input:disabled + span{opacity:.55}
+/* 44px thumb target, 24px visible circle */
+.verdict .viqi{width:44px;height:44px;flex:none;padding:0;border:0;background:none;color:var(--ash);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-text-fill-color:currentColor;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.verdict .viqi span{width:24px;height:24px;border-radius:50%;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font:italic 700 13px ui-serif,Georgia,serif}
+.verdict .viqi:hover span,.verdict .viqi[aria-expanded="true"] span{border-color:var(--ember);color:var(--ember)}
+.verdict .viqtip{margin:9px 0 0;padding:10px 12px;border:1px solid var(--edge);border-radius:8px;background:var(--panel);font-size:12px;line-height:1.5;color:#CFC4B3}
+.verdict .viqtip[hidden]{display:none}
+.verdict .vsharemsg{margin:9px 0 0;font-size:12px;color:var(--amber);text-align:center}
+@media (max-height:640px){.verdict .vport{display:none}.verdict h2{font-size:clamp(44px,14vw,66px)}.verdict .vbtns{margin-top:16px}.verdict .vshare{margin-top:10px}}
+@media (max-height:600px){.verdict .vwho{display:none}.verdict .vstn{margin-top:10px}.verdict .vsay{margin-top:10px;font-size:15px}.verdict h2{font-size:clamp(40px,13vw,56px)}}
+#challenge{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding:10px 14px;border:1px solid rgba(255,122,26,.4);border-radius:10px;background:var(--emberdim);color:var(--bone);font-size:13.5px;line-height:1.4}
+#challenge button{background:none;border:0;color:var(--ash);font-size:22px;line-height:1;cursor:pointer;min-width:44px;min-height:44px;margin:-10px -10px -10px 0;padding:0;-webkit-text-fill-color:currentColor;touch-action:manipulation}
 </style>
 </head>
 <body>
@@ -1370,20 +1394,20 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
   <section style="margin-top:26px">
     <h2>The four games</h2>
     <p class="lede">Real strategy games, centuries apart, folded into one climb. Three are open to practice. The fourth is Māra's alone.</p>
-    <p class="lede" style="margin-top:-10px">Every opponent plays at full strength. <a href="unbeatable-ai/" style="color:var(--amber)">See how hard, and test your own Game IQ &rarr;</a></p>
+    <p class="lede" style="margin-top:-10px">Every opponent plays at full strength. <a href="https://stratiq-ar7.github.io/Mara/unbeatable-ai/" style="color:var(--amber);display:inline-block;padding:12px 0">See how hard, and test your own Game IQ &rarr;</a></p>
 
     <div class="card">
-      <h3><a href="brandubh/" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--edge)">Brandubh &mdash; Ireland, c. 700 AD</a></h3>
+      <h3><a href="https://stratiq-ar7.github.io/Mara/brandubh/" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--edge);display:inline-block;padding:8px 0">Brandubh &mdash; Ireland, c. 700 AD</a></h3>
       <p>One king and four defenders against eight attackers on a 7&times;7 board. Every piece slides like a rook, any distance, no jumping. Only the king may stand on a corner or the centre throne. A piece is captured when an opponent's move pins it between two hostile squares &mdash; walking into that trap yourself is always safe. The king needs three hostile sides to fall, and only the move that closes the third side counts. Defenders win by walking the king into any corner; attackers win by trapping him or leaving the defenders with no legal move.</p>
     </div>
 
     <div class="card">
-      <h3><a href="bagh-chal/" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--edge)">Bagh Chal &mdash; Nepal, Himalayan folk game</a></h3>
+      <h3><a href="https://stratiq-ar7.github.io/Mara/bagh-chal/" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--edge);display:inline-block;padding:8px 0">Bagh Chal &mdash; Nepal, Himalayan folk game</a></h3>
       <p>Four tigers against twenty goats on a 5&times;5 grid of lines. Goats place one at a time and can't move until all twenty are down; tigers can move or jump a goat from the first turn. A tiger jumps in a straight line over one adjacent goat into the empty point beyond, removing it. Tigers win by taking five goats. Goats win by trapping every tiger so none can move, or by surviving forty-four moves without a capture once the herd is fully placed.</p>
     </div>
 
     <div class="card">
-      <h3><a href="amazons/" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--edge)">Amazons &mdash; Argentina, 1988</a></h3>
+      <h3><a href="https://stratiq-ar7.github.io/Mara/amazons/" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--edge);display:inline-block;padding:8px 0">Amazons &mdash; Argentina, 1988</a></h3>
       <p>Invented by Walter Zamkauskas, the youngest game here by twelve centuries. Each side moves one piece like a chess queen, then fires an arrow from its new square, also queen-style, into any empty square in reach. That square burns for the rest of the game. There's no capturing &mdash; only vanishing room. The last player able to move wins; there is no draw.</p>
     </div>
 
@@ -1617,6 +1641,18 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
     <p class="vstn" id="v-stn"></p>
     <div class="vbtns">
       <button id="v-again">Again</button>
+    </div>
+    <div class="vshare" id="v-share" hidden>
+      <div class="vsharerow">
+        <button type="button" id="v-sharebtn">Share this result</button>
+        <button type="button" id="v-copybtn">Copy link</button>
+      </div>
+      <div class="viq">
+        <label><input type="checkbox" id="v-iq"><span id="v-iqlabel">Include my Game IQ</span></label>
+        <button type="button" class="viqi" id="v-iqi" aria-label="About sharing your Game IQ" aria-expanded="false" aria-controls="v-iqtip"><span aria-hidden="true">i</span></button>
+      </div>
+      <p class="viqtip" id="v-iqtip" role="note" hidden>Your Game IQ stays private by default. If you tick this box, your number is drawn onto the image you share, so anyone you send it to will see it. It is a snapshot of the moves played in this browser so far. Nothing is uploaded to us, and we only count whether the box was ticked, never the number. Untick it any time before sharing.</p>
+      <p class="vsharemsg" id="v-sharemsg" aria-live="polite"></p>
     </div>
   </div>
 </div>
@@ -3288,9 +3324,10 @@ function showVerdict(won){
       : 'Station '+ROMAN[ladderStation]+' holds. '+(losses(ladderStation)>=5?'A rope is waiting.':'Try again.');
   } else stn.textContent='';
   $('v-again').textContent = ladderStation ? (won===true?'Climb on':'Try again') : 'Again';
+  try{ shareOnVerdict(won); }catch(e){ const sb=$('v-share'); if(sb) sb.hidden=true; }
   v.classList.add('on');
 }
-function hideVerdict(){ const v=$('verdict'); if(v) v.classList.remove('on'); }
+function hideVerdict(){ const v=$('verdict'); if(v) v.classList.remove('on'); try{ shareReset(); }catch(e){} }
 function finish(w){
   over=w;busy=false;
   const isDraw = w===DRAW;
@@ -4193,6 +4230,215 @@ document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{
   if(b.dataset.p==='practice'){ paintPractice(); paintSkills(); }
   if(b.dataset.p==='table'){ paintGameIQ(); paintSkills(); }
 });
+
+/* ---- MARA share card: pure canvas drawing. No game state, no DOM. ----
+   d = { won, roman, foe, sub, game, moves, tries, iq, url }
+   iq is null unless the player explicitly ticked the box.            */
+function renderShareCard(ctx, d, kimg){
+  const W=1080, H=1350;
+  const SERIF='"Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif';
+  const SANS='"Segoe UI", Roboto, Helvetica, Arial, sans-serif';   /* plain stack: every canvas engine accepts it */
+  const EMBER='#FF7A1A', AMBER='#FFB03A', BONE='#F0E8DC', ASH='#8A7F70', VOID='#0B0A08';
+  const accent = d.won ? AMBER : EMBER;
+
+  function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function spaced(text, cx, y, sp){                      /* letter-spaced, centred on cx */
+    const chars=[...text]; const ws=chars.map(c=>ctx.measureText(c).width);
+    let w=ws.reduce((a,b)=>a+b,0)+sp*(chars.length-1), x=cx-w/2;
+    ctx.textAlign='left'; chars.forEach((c,i)=>{ ctx.fillText(c,x,y); x+=ws[i]+sp; }); ctx.textAlign='center';
+  }
+  function spacedLeft(text, x, y, sp, maxW){             /* letter-spaced, left-aligned, tightened to fit maxW */
+    const chars=[...text]; const ws=chars.map(c=>ctx.measureText(c).width), sum=ws.reduce((a,b)=>a+b,0);
+    while(sum+sp*(chars.length-1)>maxW && sp>1) sp--;
+    ctx.textAlign='left'; chars.forEach((c,i)=>{ ctx.fillText(c,x,y); x+=ws[i]+sp; });
+  }
+
+  /* ground and glow */
+  ctx.fillStyle=VOID; ctx.fillRect(0,0,W,H);
+  let g=ctx.createRadialGradient(540,330,40,540,330,820);
+  g.addColorStop(0, d.won?'rgba(255,176,58,0.24)':'rgba(255,122,26,0.17)'); g.addColorStop(1,'rgba(11,10,8,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  g=ctx.createLinearGradient(0,H-340,0,H); g.addColorStop(0,'rgba(11,10,8,0)'); g.addColorStop(1,'rgba(40,18,4,0.55)');
+  ctx.fillStyle=g; ctx.fillRect(0,H-340,W,340);
+  ctx.strokeStyle='rgba(255,122,26,0.32)'; ctx.lineWidth=2; rr(36,36,W-72,H-72,26); ctx.stroke();
+
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+
+  /* wordmark */
+  ctx.fillStyle=EMBER; ctx.font='700 58px '+SERIF; spaced('M\u0100RA', 540, 122, 22);
+
+  /* headline: STATION III / CLEARED or HOLDS */
+  ctx.fillStyle=BONE; ctx.font='600 66px '+SERIF; spaced('STATION '+d.roman, 540, 240, 10);
+  const word = d.won ? 'CLEARED' : 'HOLDS';
+  let fs=210; ctx.font='700 '+fs+'px '+SERIF;
+  while(ctx.measureText(word).width>880 && fs>90){ fs-=6; ctx.font='700 '+fs+'px '+SERIF; }
+  ctx.save(); ctx.shadowColor=accent; ctx.shadowBlur=56; ctx.fillStyle=accent; ctx.fillText(word,540,420); ctx.restore();
+  ctx.fillStyle=ASH; ctx.font='italic 400 36px '+SERIF; ctx.fillText(d.sub+'  \u00b7  '+d.game+'  \u00b7  vs '+d.foe, 540, 490);
+
+  /* left: Kurama, his name beneath; right: the facts, stacked */
+  const hasIQ = d.iq!==null && d.iq!==undefined;
+  const px=110, pw=280, ph=298, py = hasIQ ? 566 : 668;
+  ctx.save(); rr(px,py,pw,ph,24); ctx.clip();
+  if(kimg){ ctx.drawImage(kimg,px,py,pw,ph); } else { ctx.fillStyle='#1D1811'; ctx.fillRect(px,py,pw,ph); }
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,122,26,0.45)'; ctx.lineWidth=2; rr(px,py,pw,ph,24); ctx.stroke();
+  ctx.fillStyle=ASH; ctx.font='700 24px '+SANS; spaced('KURAMA', px+pw/2, py+ph+46, 8);
+
+  const cells=[];
+  if(d.moves) cells.push({v:String(d.moves), l:'MOVES', f:70});
+  if(d.tries) cells.push({v:String(d.tries), l:'ATTEMPT', f:70});
+  cells.push({v:'ULTIMATE', l:'AI DIFFICULTY LEVEL', f:54});
+  const rx=474, pitch=104, top=py+(ph-cells.length*pitch)/2;
+  ctx.strokeStyle='rgba(255,122,26,0.28)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(436,py+6); ctx.lineTo(436,py+ph-6); ctx.stroke();
+  cells.forEach(function(c,i){
+    const y0=top+i*pitch;
+    ctx.textAlign='left';
+    ctx.fillStyle=BONE; ctx.font='700 '+c.f+'px '+SERIF; ctx.fillText(c.v, rx, y0+58);
+    ctx.fillStyle=ASH; ctx.font='700 22px '+SANS; spacedLeft(c.l, rx, y0+92, 6, 480);
+  });
+  ctx.textAlign='center';
+
+  /* Game IQ: only when the player chose to include it */
+  if(hasIQ){
+    ctx.fillStyle=ASH; ctx.font='700 24px '+SANS; spaced('GAME IQ', 540, 1004, 9);
+    ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=34; ctx.fillStyle=AMBER; ctx.font='700 120px '+SERIF; ctx.fillText(String(d.iq), 540, 1118); ctx.restore();
+  }
+
+  /* the ask */
+  ctx.fillStyle=BONE; ctx.font='italic 400 46px '+SERIF; ctx.fillText('Think you can beat it?', 540, 1192);
+  ctx.fillStyle=EMBER; ctx.font='700 34px '+SANS; ctx.fillText(d.url, 540, 1240);
+  ctx.fillStyle=ASH; ctx.font='600 22px '+SANS; spaced('FREE  \u00b7  NO DOWNLOAD  \u00b7  NO ACCOUNT', 540, 1282, 4);
+}
+if(typeof module!=='undefined') module.exports={renderShareCard};
+
+/* ============ share a ranked result (win or loss) ============
+   Additive: reads existing state, changes none of it. If anything here fails the
+   button simply stays hidden and the game carries on.                              */
+const SHARE_ENABLED = true;
+const SHARE_BASE = 'https://stratiq-ar7.github.io/Mara/';   /* the one place to change when a custom domain arrives */
+let __shareCtx = null, __cardFile = null, __cardKey = '';
+const __kImg = (function(){ try{ const i=new Image(); i.src='data:image/png;base64,'+KPORTRAITS.neutral; return i; }catch(e){ return null; } })();
+
+/* same formula the IQ page uses, computed on demand (never stored, never sent to analytics) */
+function currentGameIQ(){ return LIFE.moves ? Math.round(100*Math.exp(-0.022*(LIFE.loss/LIFE.moves))) : null; }
+function shareRef(){ try{ const a=new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a,function(x){return (x%36).toString(36);}).join(''); }catch(e){ return Math.random().toString(36).slice(2,8); } }
+function buildShareUrl(c){ return SHARE_BASE+'?utm_source=share&s='+c.station+'&r='+(c.won?'w':'l')+'&ref='+c.ref; }
+function shareCaption(c){
+  const st=STATIONS[c.station], mv=c.moves?(' in '+c.moves+' moves'):'';
+  return c.won ? 'I cleared Station '+ROMAN[c.station]+' ('+st.foe+') on M\u0100RA'+mv+'. Think you can? '+c.url
+               : st.foe+' beat me at Station '+ROMAN[c.station]+' on M\u0100RA'+mv+'. Your turn: '+c.url;
+}
+function cardData(c, iq){
+  const st=STATIONS[c.station];
+  return {won:c.won, roman:ROMAN[c.station], foe:st.foe, sub:st.sub, game:st.name, moves:c.moves, tries:c.tries,
+          iq:iq, url:SHARE_BASE.replace(/^https?:\/\//,'').replace(/\/$/,'')};
+}
+function makeCardCanvas(c, iq){
+  const cv=document.createElement('canvas'); cv.width=1080; cv.height=1350;
+  const ctx=cv.getContext('2d'); if(!ctx) return null;
+  renderShareCard(ctx, cardData(c,iq), (__kImg && __kImg.complete && __kImg.naturalWidth) ? __kImg : null);
+  return cv;
+}
+function cardBlob(cv){ return new Promise(function(res){ try{ cv.toBlob(function(b){res(b);},'image/png'); }catch(e){ res(null); } }); }
+function iqWanted(){ const cb=$('v-iq'); return !!(cb && cb.checked && !cb.disabled); }
+
+/* build the image ahead of the tap, so the native share sheet opens instantly (Safari is strict about this) */
+async function prepareCard(){
+  if(!__shareCtx) return;
+  const useIQ=iqWanted(), key=(useIQ?'1':'0')+'|'+__shareCtx.ref;
+  if(key===__cardKey && __cardFile) return;
+  __cardKey=key; __cardFile=null;
+  try{
+    const cv=makeCardCanvas(__shareCtx, useIQ?currentGameIQ():null); if(!cv) return;
+    const b=await cardBlob(cv);
+    if(b && key===__cardKey) __cardFile=new File([b],'mara-result.png',{type:'image/png'});
+  }catch(e){}
+}
+
+async function shareResult(){
+  const c=__shareCtx; if(!c) return;
+  const useIQ=iqWanted();
+  if(!__cardFile || __cardKey.charAt(0)!==(useIQ?'1':'0')) await prepareCard();
+  const file=__cardFile, caption=shareCaption(c), msg=$('v-sharemsg');
+  const canNative=!!(file && navigator.canShare && navigator.canShare({files:[file]}));
+  const method=canNative?'native':(file?'download':'copy');
+  /* analytics records that the box was ticked, never the number itself */
+  track('share_clicked', {kind:c.kind, station_number:c.station, method:method, includes_iq:useIQ, share_ref:c.ref});
+  if(canNative){
+    try{ await navigator.share({files:[file], text:caption}); return; }
+    catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  if(file){
+    try{ const a=document.createElement('a'), u=URL.createObjectURL(file); a.href=u; a.download='mara-result.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(u);},4000); }catch(e){}
+  }
+  let copied=false; try{ await navigator.clipboard.writeText(caption); copied=true; }catch(e){}
+  if(msg) msg.textContent = file ? (copied?'Image saved. Caption and link copied.':'Image saved. Link: '+c.url)
+                                 : (copied?'Caption and link copied.':'Link: '+c.url);
+}
+
+/* copy just the link: for apps that drop an image's caption (Instagram, Facebook), the player can paste it themselves */
+async function copyShareLink(){
+  const c=__shareCtx; if(!c) return; const msg=$('v-sharemsg');
+  track('share_clicked', {kind:c.kind, station_number:c.station, method:'copy_link', includes_iq:false, share_ref:c.ref});
+  let ok=false;
+  try{ await navigator.clipboard.writeText(c.url); ok=true; }catch(e){}
+  if(!ok){
+    try{ const ta=document.createElement('textarea'); ta.value=c.url; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+         document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,ta.value.length); ok=!!document.execCommand('copy'); ta.remove(); }catch(e){}
+  }
+  if(msg) msg.textContent = ok ? 'Link copied. Paste it anywhere.' : 'Copy this link: '+c.url;
+}
+function iqTip(open){
+  const t=$('v-iqtip'), b=$('v-iqi'); if(!t||!b) return;
+  t.hidden=!open; b.setAttribute('aria-expanded', open?'true':'false');
+}
+function shareReset(){
+  iqTip(false); const m=$('v-sharemsg'); if(m) m.textContent='';
+  __cardFile=null; __cardKey='';
+}
+/* called from showVerdict: only ranked wins and losses get a share row */
+function shareOnVerdict(won){
+  const box=$('v-share'); if(!box) return;
+  shareReset();
+  const ok = SHARE_ENABLED && !!ladderStation && (won===true||won===false) && !tableActive && !!STATIONS[ladderStation];
+  box.hidden=!ok;
+  if(!ok){ __shareCtx=null; return; }
+  const c={kind:won?'station_win':'station_loss', station:ladderStation, won:won, moves:(acc&&acc.n)||0,
+           tries:LADDER.tries[ladderStation]||0, ref:shareRef()};
+  c.url=buildShareUrl(c); __shareCtx=c;
+  const cb=$('v-iq'), lab=$('v-iqlabel'), iq=currentGameIQ();
+  cb.checked=false;                                  /* private unless the player opts in, every time */
+  cb.disabled=(iq===null);
+  lab.textContent = iq===null ? 'Game IQ (play a few more moves first)' : 'Include my Game IQ';
+  track('share_card_shown', {kind:c.kind, station_number:c.station});
+  prepareCard();
+}
+(function wireShare(){
+  const btn=$('v-sharebtn'), cb=$('v-iq'), i=$('v-iqi');
+  if(btn) btn.onclick=shareResult;
+  const cp=$('v-copybtn'); if(cp) cp.onclick=copyShareLink;
+  if(cb) cb.onchange=function(){ __cardKey=''; prepareCard(); };
+  if(i) i.onclick=function(){ iqTip($('v-iqtip').hidden); };
+})();
+
+/* someone arriving from a shared card sees a short banner; everyone else sees nothing new */
+(function challengeBanner(){
+  try{
+    const q=new URLSearchParams(location.search);
+    const s=parseInt(q.get('s'),10), r=q.get('r'), ref=(q.get('ref')||'').replace(/[^a-z0-9]/gi,'').slice(0,12);
+    if(!(s>=1 && s<=6) || (r!=='w' && r!=='l') || !STATIONS[s]) return;
+    const home=document.getElementById('p-home'); if(!home) return;
+    const el=document.createElement('div'); el.id='challenge'; el.setAttribute('role','status');
+    const t=document.createElement('span'), x=document.createElement('button');
+    t.textContent = r==='w' ? 'A friend cleared Station '+ROMAN[s]+' ('+STATIONS[s].foe+'). Can you?'
+                            : 'A friend lost to Station '+ROMAN[s]+' ('+STATIONS[s].foe+'). Think you can do better?';
+    x.type='button'; x.setAttribute('aria-label','Dismiss'); x.textContent='\u00d7'; x.onclick=function(){ el.remove(); };
+    el.appendChild(t); el.appendChild(x); home.insertBefore(el, home.firstChild);
+    setTimeout(function(){ track('challenge_opened', {station_number:s, from_result:r==='w'?'win':'loss', share_ref:ref}); }, 120);
+  }catch(e){}
+})();
+
 </script>
 </body>
 </html>

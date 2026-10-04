@@ -62,7 +62,7 @@ body{margin:0;padding:0;background:var(--void);color:var(--bone);
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .wrap{max-width:640px;margin:0 auto;padding:28px 18px 60px}
-.back{display:inline-block;color:var(--ash);text-decoration:none;font-size:13px;margin-bottom:18px}
+.back{display:inline-flex;align-items:center;min-height:44px;color:var(--ash);text-decoration:none;font-size:14px;margin-bottom:10px}
 .back:hover{color:var(--amber)}
 h1{font-family:ui-serif,"Iowan Old Style",Palatino,Georgia,serif;font-size:clamp(36px,10vw,52px);
   font-weight:600;letter-spacing:.02em;margin:0 0 2px;color:var(--bone)}
@@ -78,15 +78,15 @@ p{color:var(--ash);font-size:14.5px;line-height:1.65;margin:0 0 12px}
 .note{color:var(--ash);font-size:12.5px;text-align:center;margin:0 0 10px}
 .other{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .other a{color:var(--amber);text-decoration:none;font-size:13.5px;border:1px solid var(--edge);
-  border-radius:8px;padding:7px 12px}
+  border-radius:8px;padding:0 14px;min-height:44px;display:inline-flex;align-items:center}
 .other a:hover{border-color:var(--amber)}
 footer{margin-top:40px;color:var(--ash);font-size:12px;text-align:center}
-footer a{color:var(--ash)}
+footer a{color:var(--ash);display:inline-block;padding:14px 4px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../">&larr; Back to MĀRA</a>
+  <a class="back" href="https://stratiq-ar7.github.io/Mara/">&larr; Back to MĀRA</a>
   <h1>Unbeatable AI</h1>
   <p class="sub">Zero blunders &middot; six-move search &middot; Game IQ scoring</p>
   <p class="lede">This AI doesn't just get harder — it gets honest. Here's exactly what you're up against, and how your own play gets measured along the way.</p>
@@ -107,19 +107,19 @@ footer a{color:var(--ash)}
   <p>Brandubh, Bagh Chal and Amazons are free to practice against this AI at five difficulty levels, from forgiving to Ultimate. Clear all six stations on the ranked ladder and a fourth game, kept hidden until then, waits at the top — played only against Māra himself.</p>
 
 
-  <a class="cta" href="../" onclick="return trackAndGo(this,'landing_cta_click',{page:'unbeatable-ai'})">Play Free &rarr;</a>
+  <a class="cta" href="https://stratiq-ar7.github.io/Mara/" onclick="return trackAndGo(this,'landing_cta_click',{page:'unbeatable-ai'})">Play Free &rarr;</a>
   <p class="note">No download. No account. Runs in your browser.</p>
 
   <div class="card">
     <strong style="color:var(--bone);font-size:14px">The three games you can practice</strong>
     <div class="other">
-      <a href="../brandubh/">Brandubh</a>
-      <a href="../bagh-chal/">Bagh Chal</a>
-      <a href="../amazons/">Amazons</a>
+      <a href="https://stratiq-ar7.github.io/Mara/brandubh/">Brandubh</a>
+      <a href="https://stratiq-ar7.github.io/Mara/bagh-chal/">Bagh Chal</a>
+      <a href="https://stratiq-ar7.github.io/Mara/amazons/">Amazons</a>
     </div>
   </div>
 
-  <footer>Part of <a href="../">MĀRA — A Mythological Strategy Game Ladder</a></footer>
+  <footer>Part of <a href="https://stratiq-ar7.github.io/Mara/">MĀRA — A Mythological Strategy Game Ladder</a></footer>
 </div>
 <script>setTimeout(()=>track('landing_page_view', {page:'unbeatable-ai', url:location.href}), 50);</script>
 </body>
