@@ -1277,6 +1277,15 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
 .verdict .vsharemsg{margin:9px 0 0;font-size:12px;color:var(--amber);text-align:center}
 @media (max-height:640px){.verdict .vport{display:none}.verdict h2{font-size:clamp(44px,14vw,66px)}.verdict .vbtns{margin-top:16px}.verdict .vshare{margin-top:10px}}
 @media (max-height:600px){.verdict .vwho{display:none}.verdict .vstn{margin-top:10px}.verdict .vsay{margin-top:10px;font-size:15px}.verdict h2{font-size:clamp(40px,13vw,56px)}}
+/* the Game IQ dial */
+.iqgauge-wrap{display:flex;justify-content:center;margin:14px 0 2px}
+#iqgauge{width:100%;max-width:340px;height:auto}
+.iqwhere{margin:4px 0 0;text-align:center;font-size:15px;color:var(--bone);line-height:1.45}
+.iqnext{margin:4px 0 0;text-align:center;font-size:13px;color:var(--amber)}
+.iqlegend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;margin:14px 0 0;font-size:12px;color:var(--ash)}
+.iqlegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.iqnote{margin:10px 0 0;text-align:center;font-size:12px;color:var(--ash);line-height:1.5}
+.iqclear{margin:10px 0 0;text-align:center;font-size:13px;color:var(--ash)}
 /* share your Game IQ (IQ page) */
 .iqshare{margin-top:20px}
 .iqshare[hidden]{display:none}
@@ -1285,6 +1294,8 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
 .iqshare #iq-sharebtn{flex:1;min-width:0;background:var(--ember);color:#160D03;border:0;-webkit-text-fill-color:#160D03}
 .iqshare #iq-copybtn{flex:0 0 auto;padding:0 16px;background:none;border:1px solid var(--edge);color:var(--amber);-webkit-text-fill-color:currentColor;font-weight:600}
 .iqshare .iqrow{display:flex;align-items:center;justify-content:space-between;margin-top:4px;font-size:13px;color:var(--ash)}
+.iqshare .iqcheck{display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-height:44px}
+.iqshare .iqcheck input{accent-color:var(--ember);width:22px;height:22px;margin:0;flex:none}
 .iqshare .viqi{width:44px;height:44px;flex:none;padding:0;border:0;background:none;color:var(--ash);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-text-fill-color:currentColor;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .iqshare .viqi span{width:24px;height:24px;border-radius:50%;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font:italic 700 13px ui-serif,Georgia,serif}
 .iqshare .viqi:hover span,.iqshare .viqi[aria-expanded="true"] span{border-color:var(--ember);color:var(--ember)}
@@ -1579,14 +1590,23 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
   <h2>Your Game IQ</h2>
   <p class="lede">How close your moves are to the best move available &mdash; the one number that sums up your whole season.</p>
 
-  <div class="iqring-wrap" style="display:flex;justify-content:center;margin:18px 0">
-    <svg viewBox="0 0 120 120" width="160" height="160">
-      <circle cx="60" cy="60" r="54" fill="none" stroke="var(--edge)" stroke-width="10"/>
-      <circle id="iqring" cx="60" cy="60" r="54" fill="none" stroke="var(--ember)" stroke-width="10"
-        stroke-linecap="round" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s ease"/>
-      <text id="iqnum" x="60" y="68" text-anchor="middle" font-size="34" font-weight="800" fill="var(--bone)">&mdash;</text>
-    </svg>
-  </div>
+  <div class="iqgauge-wrap">
+        <svg id="iqgauge" viewBox="0 0 300 214" role="img" aria-label="Your Game IQ on a dial from 0 to 100, with the AI levels marked">
+          <g id="iqg-arcs"></g>
+          <g id="iqg-needle" style="transform-origin:150px 150px;transform:rotate(0deg);transition:transform .7s cubic-bezier(.3,1.2,.4,1)">
+            <line x1="150" y1="150" x2="50" y2="150" stroke="var(--bone)" stroke-width="3.5" stroke-linecap="round"/>
+          </g>
+          <circle cx="150" cy="150" r="8" fill="var(--bone)"/>
+          <text id="iqg-lo" x="6" y="174" text-anchor="start" font-size="12" fill="var(--ash)"></text>
+          <text id="iqg-hi" x="294" y="174" text-anchor="end" font-size="12" fill="var(--amber)"></text>
+          <text id="iqnum" x="150" y="200" text-anchor="middle" font-size="40" font-weight="800" fill="var(--bone)">&mdash;</text>
+        </svg>
+      </div>
+      <p class="iqwhere" id="iq-where"></p>
+      <p class="iqnext" id="iq-next"></p>
+      <div class="iqlegend" id="iq-legend"></div>
+      <p class="iqnote">Random moves means picking any legal move at random. The marks are spaced evenly, and the number is your true score.</p>
+      <p class="iqclear" id="iq-cleared"></p>
 
   <div class="skillbox">
     <h3>What each game builds</h3>
@@ -1610,13 +1630,13 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
     <p class="growtip" id="growtip" style="display:none"></p>
     <div class="iqshare" id="iq-share" hidden>
         <div class="vsharerow">
-          <button type="button" id="iq-sharebtn">Share your Game IQ</button>
+          <button type="button" id="iq-sharebtn">Share my profile</button>
           <button type="button" id="iq-copybtn">Copy link</button>
         </div>
-        <div class="iqrow"><span>What gets shared</span>
+        <div class="iqrow"><label class="iqcheck"><input type="checkbox" id="iq-showiq"><span>Show my Game IQ</span></label>
           <button type="button" class="viqi" id="iq-iqi" aria-label="About sharing your Game IQ" aria-expanded="false" aria-controls="iq-tip"><span aria-hidden="true">i</span></button>
         </div>
-        <p class="viqtip" id="iq-tip" role="note" hidden>Your Game IQ and skill chart stay private by default. If you tap Share, they are drawn onto an image that anyone you send it to will see. It is a snapshot of the moves played in this browser so far. Nothing is uploaded to us, and we only count that you shared, never your score or your skills.</p>
+        <p class="viqtip" id="iq-tip" role="note" hidden>Your card shows what you achieved: the stations you have cleared and your strongest skill, with your skill chart. Your Game IQ stays private unless you tick &ldquo;Show my Game IQ&rdquo;. A progress line (for example +18 since you started) appears whenever it is positive, and it never shows your score. Nothing is uploaded to us, and we only count that you shared, never your score or your skills.</p>
         <p class="vsharemsg" id="iq-sharemsg" aria-live="polite"></p>
       </div>
       <p class="iqlock" id="iq-lock" hidden></p>
@@ -2011,11 +2031,20 @@ async function bootProfile(){
                loss:num(LIFE.ranked.loss),moves:num(LIFE.ranked.moves)};
   LIFE.w=num(LIFE.w); LIFE.l=num(LIFE.l); LIFE.loss=num(LIFE.loss); LIFE.moves=num(LIFE.moves);
   LIFE.metKurama=!!LIFE.metKurama; LIFE.metMaraReveal=!!LIFE.metMaraReveal;
+  /* The move grader became deterministic (version 2). Scores built under the old, noisy ruler restart;
+     win and loss records are kept. Stored stats without this flag are, by definition, from the old ruler. */
+  if(LIFE.gv!==2){
+    LIFE.loss=0; LIFE.moves=0; LIFE.blunders=0; LIFE.ranked.loss=0; LIFE.ranked.moves=0;
+    for(const gk in LIFE.byGame){ const b=LIFE.byGame[gk]; if(b && typeof b==='object'){ b.loss=0; b.moves=0; } }
+    delete LIFE.iq0; LIFE.gv=2;
+    if(st){ try{ DB.set('stats',LIFE); }catch(e){} }
+  }
   paintProfile();
   paintSkills();
   paintGameIQ();
   paintPractice();
   await ladderBoot();
+  paintGameIQ();
 }
 /* Which skills each game actually exercises. Weights are a design judgement,
    not a measurement - they say what a game demands, not how good you are. */
@@ -2969,7 +2998,7 @@ const LKV={
     bg[won?'w':'l']++;
     bg.loss=(bg.loss||0)+this.acc.loss; bg.moves=(bg.moves||0)+this.acc.n;
     LIFE[won?'w':'l']++;
-    LIFE.loss+=this.acc.loss; LIFE.moves+=this.acc.n;
+    LIFE.loss+=this.acc.loss; LIFE.moves+=this.acc.n; noteFirstScore();
     paintProfile(); paintSkills(); paintGameIQ(); saveProgress();
     ladderResult(won, this.acc.loss, this.acc.n);
   },
@@ -3385,7 +3414,7 @@ function finish(w){
     if(!isDraw) bg[won?'w':'l']++;
     bg.loss=(bg.loss||0)+acc.loss; bg.moves=(bg.moves||0)+acc.n;
     if(!isDraw) LIFE[won?'w':'l']++;
-    LIFE.loss+=acc.loss; LIFE.moves+=acc.n; LIFE.blunders+=acc.blund;
+    LIFE.loss+=acc.loss; LIFE.moves+=acc.n; LIFE.blunders+=acc.blund; noteFirstScore();
     paintProfile(); paintSkills(); paintGameIQ(); saveProgress();
     if(!isDraw) ladderResult(won, acc.loss, acc.n);
     if(!tableActive){
@@ -3627,9 +3656,30 @@ function renderBC(m){
 }
 
 /* --- input --- */
+/* GRADING looks at EVERY reply the opponent has, so the same move always gets the same grade.
+   (The AI keeps using score2/rank, which sample a random subset of replies to stay quick.
+   Grading used to share that sample, which made the ruler wobble from move to move.) */
+function gradeScore2(s,mv,side){
+  const ns=cpS(s);applyTo(ns,mv);
+  const opp=side===G.sideA.key?G.sideB.key:G.sideA.key;
+  const w=winOf(ns,opp,mv);
+  if(w===side)return 5000;if(w)return -5000;
+  const rep=G.all(ns,opp);if(!rep.length)return 5000;
+  let worst=Infinity;
+  for(const rm of rep){const v=-G.score(ns,rm,opp);if(v<worst)worst=v;}
+  return worst;
+}
+function gradeRank(moves,side){
+  const CAND=G.id==='amazons'?40:60;          /* same cheap shortlist as the AI's rank() */
+  let arr=moves.map(m=>({m,s:G.score(st,m,side)})).sort((a,b)=>b.s-a.s);
+  if(arr.length>CAND)arr=arr.slice(0,CAND);
+  arr.forEach(x=>x.s=gradeScore2(st,x.m,side));
+  arr.sort((a,b)=>b.s-a.s);
+  return arr;
+}
 function commitScored(mv,side){
-  const arr=rank(legalAll(side),side);
-  const chosen=scoreOf(mv,side);
+  const arr=gradeRank(legalAll(side),side);
+  const chosen=gradeScore2(st,mv,side);
   recordMove(chosen,arr[0].s,arr[arr.length-1].s);
 }
 function tapGrid(r,c){
@@ -4217,14 +4267,77 @@ $('df').oninput=e=>{diff=+e.target.value-1;$('dfn').textContent=DIFF[diff].n;
 $('df').dispatchEvent(new Event('input'));
 
 /* ============ game iq ============ */
+/* The marks on the dial are MEASURED, not invented: each AI level was run through the game's own grader
+   (about 270 simulated games, plus or minus 4). 100 is a real maximum: every move is the best the grader finds.
+   "Random moves" is a player who picks any legal move at random. */
+const IQ_ZONES=[
+  {v:38,  short:'Random moves', name:'random play'},
+  {v:66,  short:'Novice',       name:'the Novice AI'},
+  {v:75,  short:'Semi-Pro',     name:'the Semi-Pro AI'},
+  {v:86,  short:'Pro',          name:'the Pro AI'},
+  {v:91,  short:'Ultimate',     name:'the Ultimate AI'},
+  {v:100, short:'Perfect',      name:'perfect play'}
+];
+const IQ_BANDS=['#6E6455','#B7791F','#E08A1E','#FF9F2E','#FFD27A'];   /* one band between each pair of marks */
+/* The marks are spaced EVENLY around the dial and your score is placed between them, so the dial is balanced and
+   reads like the ladder it is. The number shown is always your true score. Below random play the needle rests at the start. */
+function iqDialPct(v){
+  const z=IQ_ZONES, n=z.length-1;
+  if(v<=z[0].v) return 0; if(v>=z[n].v) return 100;
+  for(let i=1;i<=n;i++){ if(v<=z[i].v) return ((i-1)+(v-z[i-1].v)/(z[i].v-z[i-1].v))*100/n; }
+  return 100;
+}
+function iqPolar(p,r){ const a=Math.PI*(1-p/100); return [150+r*Math.cos(a), 150-r*Math.sin(a)]; }   /* p = percent along the dial */
+function iqArc(p1,p2,r){ const p=iqPolar(p1,r), q=iqPolar(p2,r); return 'M'+p[0].toFixed(1)+' '+p[1].toFixed(1)+' A'+r+' '+r+' 0 0 1 '+q[0].toFixed(1)+' '+q[1].toFixed(1); }
+function iqWhere(v){
+  if(v===null) return 'Play a few games and the needle will land here.';
+  if(v>=100) return 'Perfect play. Every move was the best available.';
+  if(v>=91) return 'Past the Ultimate AI, on the way to perfect play.';
+  if(v>=86) return 'Between the Pro AI and the Ultimate AI.';
+  if(v>=75) return 'Between the Semi-Pro AI and the Pro AI.';
+  if(v>=66) return 'Between the Novice AI and the Semi-Pro AI.';
+  if(v>=38) return 'Between random play and the Novice AI.';
+  return 'Below random play.';
+}
+function iqNext(v){
+  if(v===null) return '';
+  const nx=IQ_ZONES.find(function(z){ return z.v>v; });
+  return nx ? 'Next: '+nx.name+' at '+nx.v+'.' : 'You are at the top of the dial.';
+}
 function paintGameIQ(){
   const el=$('iqnum'); if(!el) return;
   const a = LIFE.moves ? 100*Math.exp(-0.022*(LIFE.loss/LIFE.moves)) : null;
-  el.textContent = a===null ? '\u2014' : Math.round(a);
-  const ring=$('iqring'); if(!ring) return;
-  const C = 2*Math.PI*54;
-  ring.style.strokeDasharray = C;
-  ring.style.strokeDashoffset = a===null ? C : C*(1-a/100);
+  const v = a===null ? null : Math.max(0,Math.min(100,Math.round(a)));
+  el.textContent = v===null ? '\u2014' : v;
+  const n=IQ_ZONES.length-1;
+  const arcs=$('iqg-arcs');
+  if(arcs && !arcs.childNodes.length){
+    let h='';
+    for(let i=1;i<=n;i++) h+='<path d="'+iqArc((i-1)*100/n,i*100/n,120)+'" fill="none" stroke="'+IQ_BANDS[i-1]+'" stroke-width="16"/>';
+    for(let i=0;i<=n;i++){
+      const p=iqPolar(i*100/n,106), q=iqPolar(i*100/n,132);
+      h+='<line x1="'+p[0].toFixed(1)+'" y1="'+p[1].toFixed(1)+'" x2="'+q[0].toFixed(1)+'" y2="'+q[1].toFixed(1)+'" stroke="rgba(240,232,220,.5)" stroke-width="1.5"/>';
+    }
+    arcs.innerHTML=h;
+  }
+  const lo=$('iqg-lo'), hi=$('iqg-hi');
+  if(lo) lo.textContent=IQ_ZONES[0].short+' '+IQ_ZONES[0].v;
+  if(hi) hi.textContent=IQ_ZONES[n].short+' '+IQ_ZONES[n].v;
+  const leg=$('iq-legend');
+  if(leg && !leg.childNodes.length){
+    leg.innerHTML=IQ_ZONES.map(function(z,i){ return '<span><i style="background:'+IQ_BANDS[Math.min(i,n-1)]+'"></i>'+z.short+' '+z.v+'</span>'; }).join('');
+  }
+  const needle=$('iqg-needle');
+  if(needle){ needle.style.transform='rotate('+(v===null?0:(iqDialPct(v)*1.8))+'deg)'; needle.style.opacity = v===null ? '.25' : '1'; }
+  const svg=$('iqgauge'); if(svg) svg.setAttribute('aria-label', v===null ? 'Your Game IQ dial, no moves scored yet' : 'Your Game IQ is '+v+', on a dial that runs from random moves to perfect play');
+  const w=$('iq-where'); if(w) w.textContent=iqWhere(v);
+  const nx=$('iq-next'); if(nx) nx.textContent=iqNext(v);
+  const c=$('iq-cleared');
+  if(c){
+    let cl=0, beat=false;
+    try{ cl=(LADDER&&LADDER.cleared)||0; beat=!!(TABLE_STATE&&TABLE_STATE.won); }catch(e){}
+    c.textContent='Stations cleared: '+Math.min(6,cl)+' of 6'+(beat?' \u00b7 M\u0101ra beaten':'');
+  }
 }
 $('namesave').onclick=()=>claimName('nameinput');
 $('nameinput').addEventListener('keydown',e=>{if(e.key==='Enter')claimName();});
@@ -4250,7 +4363,7 @@ function goto(p){
   document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.p===lit));
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
   $('p-'+p).classList.add('on');
-  if(p==='table'){ try{ paintIqShare(); }catch(e){} }
+  if(p==='table'){ try{ paintGameIQ(); }catch(e){} try{ paintProfileShare(); }catch(e){} }
   toTop();
 }
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{
@@ -4340,89 +4453,107 @@ function renderShareCard(ctx, d, kimg){
   ctx.fillStyle=ASH; ctx.font='600 22px '+SANS; spaced('FREE  \u00b7  NO DOWNLOAD  \u00b7  NO ACCOUNT', 540, 1282, 4);
 }
 
-/* ---- MARA Game IQ card: the number, how it is defined, and the whole six-skill chart ----
-   d = { iq, prof:[six numbers 0..100], skills:[six names], best:index of the strongest, url } */
-function renderIqCard(ctx, d){
+/* ---- MARA profile card: leads with what the player ACHIEVED. The Game IQ appears only if the player ticks it. ----
+   d = { cleared (0..6), beatMara, iq (null unless shown), delta (progress since the first score, 0 if none),
+         prof:[six 0..100], skills:[six names], best, url, zones:[{v,short}], nextLabel }                          */
+function renderProfileCard(ctx, d){
   const W=1080, H=1350;
   const SERIF='"Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif';
   const SANS='"Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   const EMBER='#FF7A1A', AMBER='#FFB03A', BONE='#F0E8DC', ASH='#8A7F70', VOID='#0B0A08', EDGE='#3A3020';
+  const BANDS=['#6E6455','#B7791F','#E08A1E','#FF9F2E','#FFD27A'];
   function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
-  function spaced(text, cx, y, sp){
-    const chars=[...text]; const ws=chars.map(c=>ctx.measureText(c).width);
-    let w=ws.reduce((a,b)=>a+b,0)+sp*(chars.length-1), x=cx-w/2;
-    ctx.textAlign='left'; chars.forEach((c,i)=>{ ctx.fillText(c,x,y); x+=ws[i]+sp; }); ctx.textAlign='center';
-  }
+  function spaced(text, cx, y, sp){ const chars=[...text]; const ws=chars.map(c=>ctx.measureText(c).width);
+    let w=ws.reduce((a,b)=>a+b,0)+sp*(chars.length-1), x=cx-w/2; ctx.textAlign='left'; chars.forEach((c,i)=>{ ctx.fillText(c,x,y); x+=ws[i]+sp; }); ctx.textAlign='center'; }
+  const showIq = d.iq!==null && d.iq!==undefined;
+  const cleared = Math.max(0, Math.min(6, d.cleared|0));
 
-  /* ground and glow */
   ctx.fillStyle=VOID; ctx.fillRect(0,0,W,H);
-  let g=ctx.createRadialGradient(540,340,40,540,340,820);
-  g.addColorStop(0,'rgba(255,176,58,0.22)'); g.addColorStop(1,'rgba(11,10,8,0)');
+  let g=ctx.createRadialGradient(540,320,40,540,320,820); g.addColorStop(0,'rgba(255,176,58,0.22)'); g.addColorStop(1,'rgba(11,10,8,0)');
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   g=ctx.createLinearGradient(0,H-340,0,H); g.addColorStop(0,'rgba(11,10,8,0)'); g.addColorStop(1,'rgba(40,18,4,0.55)');
   ctx.fillStyle=g; ctx.fillRect(0,H-340,W,340);
   ctx.strokeStyle='rgba(255,122,26,0.32)'; ctx.lineWidth=2; rr(36,36,W-72,H-72,26); ctx.stroke();
   ctx.textAlign='center'; ctx.textBaseline='alphabetic';
 
-  /* wordmark and title */
-  ctx.fillStyle=EMBER; ctx.font='700 52px '+SERIF; spaced('M\u0100RA', 540, 104, 20);
-  ctx.fillStyle=ASH; ctx.font='700 26px '+SANS; spaced('MY GAME IQ', 540, 170, 10);
+  ctx.fillStyle=EMBER; ctx.font='700 46px '+SERIF; spaced('M\u0100RA', 540, 94, 18);
+  ctx.fillStyle=ASH; ctx.font='700 24px '+SANS; spaced('MY PROFILE', 540, 138, 10);
 
-  /* the ring, filled to the score, with the number inside */
-  const cx=540, cy=312, r=92, iq=Math.max(0,Math.min(100,+d.iq||0));
-  ctx.lineWidth=16; ctx.lineCap='round';
-  ctx.strokeStyle=EDGE; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
-  ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=24; ctx.strokeStyle=AMBER;
-  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*iq/100); ctx.stroke(); ctx.restore();
-  ctx.lineCap='butt';
-  let nf=104; ctx.font='700 '+nf+'px '+SERIF;
-  while(ctx.measureText(String(d.iq)).width>140 && nf>60){ nf-=6; ctx.font='700 '+nf+'px '+SERIF; }
-  ctx.fillStyle=BONE; ctx.fillText(String(d.iq), cx, cy+nf*0.36);
+  /* the headline: the true achievement */
+  const all = cleared>=6;
+  const big = d.beatMara ? 'I BEAT M\u0100RA' : (all ? 'REACHED M\u0100RA' : cleared+' OF 6');
+  const sub = (d.beatMara||all) ? '6 OF 6 STATIONS CLEARED' : 'STATIONS CLEARED';
+  const hy = showIq ? 262 : 292;
+  let fs=showIq?120:150; ctx.font='700 '+fs+'px '+SERIF; while(ctx.measureText(big).width>900 && fs>70){ fs-=6; ctx.font='700 '+fs+'px '+SERIF; }
+  ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=56; ctx.fillStyle=AMBER; ctx.fillText(big,540,hy); ctx.restore();
+  ctx.fillStyle=BONE; ctx.font='600 28px '+SANS; spaced(sub, 540, hy+(showIq?52:62), 8);
 
-  /* how it is defined */
-  ctx.fillStyle='#E4DACB'; ctx.font='italic 400 32px '+SERIF;
-  ctx.fillText('How close your moves are', 540, 488); ctx.fillText('to the best move available.', 540, 528);
+  /* the ladder: six stations and Mara */
+  const py = showIq ? 372 : 442, xs=[170,285,400,515,630,745], mx=880, ROM=['I','II','III','IV','V','VI'];
+  ctx.strokeStyle=EDGE; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(xs[0],py); ctx.lineTo(mx,py); ctx.stroke();
+  if(cleared>0){ ctx.strokeStyle=AMBER; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(xs[0],py); ctx.lineTo(xs[Math.min(5,cleared-1)],py); ctx.stroke(); }
+  xs.forEach(function(x,i){
+    const on=i<cleared; ctx.beginPath(); ctx.arc(x,py,27,0,Math.PI*2);
+    if(on){ ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=18; ctx.fillStyle=AMBER; ctx.fill(); ctx.restore(); ctx.fillStyle=VOID; }
+    else { ctx.fillStyle=VOID; ctx.fill(); ctx.strokeStyle=EDGE; ctx.lineWidth=3; ctx.stroke(); ctx.fillStyle=ASH; }
+    ctx.font='700 24px '+SERIF; ctx.textBaseline='middle'; ctx.fillText(ROM[i],x,py+1); ctx.textBaseline='alphabetic';
+  });
+  ctx.beginPath(); ctx.arc(mx,py,40,0,Math.PI*2);
+  if(d.beatMara){ ctx.save(); ctx.shadowColor=EMBER; ctx.shadowBlur=30; ctx.fillStyle=EMBER; ctx.fill(); ctx.restore(); ctx.fillStyle=VOID; }
+  else if(all){ ctx.fillStyle=VOID; ctx.fill(); ctx.save(); ctx.shadowColor=EMBER; ctx.shadowBlur=22; ctx.strokeStyle=EMBER; ctx.lineWidth=5; ctx.stroke(); ctx.restore(); ctx.fillStyle=EMBER; }
+  else { ctx.fillStyle=VOID; ctx.fill(); ctx.strokeStyle=EDGE; ctx.lineWidth=3; ctx.stroke(); ctx.fillStyle=ASH; }
+  ctx.font='700 36px '+SERIF; ctx.textBaseline='middle'; ctx.fillText('M',mx,py+2); ctx.textBaseline='alphabetic';
 
-  /* the whole six-skill chart, same geometry as the IQ page */
-  const rcx=540, rcy=770, R=150, n=d.skills.length;
-  const pt=function(i,rad){ const a=-Math.PI/2+i*2*Math.PI/n; return [rcx+Math.cos(a)*rad, rcy+Math.sin(a)*rad]; };
-  for(const f of [0.33,0.66,1]){
-    ctx.strokeStyle=EDGE; ctx.lineWidth=f===1?3:2; ctx.beginPath();
-    d.skills.forEach(function(_,i){ const p=pt(i,R*f); if(i) ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); });
-    ctx.closePath(); ctx.stroke();
+  let chartY, chartR;
+  if(!showIq){
+    /* a pill: progress if there is any, otherwise the next station to beat */
+    const label = d.delta>0 ? ('+'+d.delta+' GAME IQ SINCE I STARTED') : (d.nextLabel||'');
+    if(label){
+      const cy=528; rr(262,cy-30,556,60,30); ctx.fillStyle='rgba(255,176,58,0.12)'; ctx.fill(); ctx.strokeStyle='rgba(255,176,58,0.5)'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle=AMBER; ctx.font='700 24px '+SANS; spaced(label, 540, cy+8, 4);
+    }
+    chartY=830; chartR=124;
+  } else {
+    /* a compact Game IQ dial, only when the player chose to show it */
+    const zones=d.zones||[], nz=Math.max(1,zones.length-1), cx=540, cy=556, R=92;
+    const pct=function(v){ if(!zones.length||v<=zones[0].v) return 0; if(v>=zones[nz].v) return 100; for(let i=1;i<=nz;i++){ if(v<=zones[i].v) return ((i-1)+(v-zones[i-1].v)/(zones[i].v-zones[i-1].v))*100/nz; } return 100; };
+    const pol=function(p,r){ const a=Math.PI*(1-p/100); return [cx+Math.cos(a)*r, cy-Math.sin(a)*r]; };
+    ctx.lineWidth=18; ctx.lineCap='butt';
+    for(let i=1;i<=nz;i++){ const a1=Math.PI*(1-(i-1)/nz), a2=Math.PI*(1-i/nz); ctx.strokeStyle=BANDS[Math.min(i-1,BANDS.length-1)]; ctx.beginPath(); ctx.arc(cx,cy,R,-a1,-a2); ctx.stroke(); }
+    ctx.textBaseline='middle'; ctx.font='700 22px '+SANS;
+    if(zones.length){ ctx.fillStyle=ASH; ctx.textAlign='right'; ctx.fillText(zones[0].short+' '+zones[0].v, cx-R-24, cy);
+      ctx.fillStyle=AMBER; ctx.textAlign='left'; ctx.fillText(zones[nz].short+' '+zones[nz].v, cx+R+24, cy); }
+    ctx.textBaseline='alphabetic'; ctx.textAlign='center';
+    const tip=pol(pct(d.iq),R-28); ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=14; ctx.strokeStyle=BONE; ctx.lineWidth=7; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(tip[0],tip[1]); ctx.stroke(); ctx.restore();
+    ctx.fillStyle=BONE; ctx.beginPath(); ctx.arc(cx,cy,12,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=ASH; ctx.font='700 20px '+SANS; spaced('GAME IQ', 540, cy+44, 8);
+    ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=22; ctx.fillStyle=BONE; ctx.font='700 80px '+SERIF; ctx.fillText(String(d.iq), 540, cy+124); ctx.restore();
+    if(d.delta>0){ ctx.fillStyle=AMBER; ctx.font='700 22px '+SANS; spaced('+'+d.delta+' SINCE I STARTED', 540, cy+162, 5); }
+    chartY=902; chartR=88;
   }
-  ctx.lineWidth=2; ctx.strokeStyle='#2E2618';
-  d.skills.forEach(function(_,i){ const p=pt(i,R); ctx.beginPath(); ctx.moveTo(rcx,rcy); ctx.lineTo(p[0],p[1]); ctx.stroke(); });
-  ctx.beginPath();
-  d.prof.forEach(function(v,i){ const p=pt(i,R*Math.max(0.06,v/100)); if(i) ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); });
-  ctx.closePath(); ctx.fillStyle='rgba(255,122,26,0.24)'; ctx.fill();
-  ctx.strokeStyle=EMBER; ctx.lineWidth=5; ctx.lineJoin='round'; ctx.stroke();
-  d.prof.forEach(function(v,i){
-    const p=pt(i,R*Math.max(0.06,v/100)); ctx.beginPath(); ctx.arc(p[0],p[1],i===d.best?13:7,0,Math.PI*2);
-    if(i===d.best){ ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=26; ctx.fillStyle=AMBER; ctx.fill(); ctx.restore(); }
-    else { ctx.fillStyle=EMBER; ctx.fill(); }
-  });
-  ctx.textBaseline='middle'; ctx.font='700 27px '+SANS;
-  d.skills.forEach(function(nm,i){
-    const p=pt(i,R+38); ctx.fillStyle=(i===d.best)?AMBER:ASH;
-    ctx.textAlign = Math.abs(p[0]-rcx)<8 ? 'center' : (p[0]>rcx ? 'left' : 'right');
-    ctx.fillText(nm.toUpperCase(), p[0], p[1]);
-  });
+
+  /* the whole six-skill chart */
+  const rcx=540, rcy=chartY, RR=chartR, n=d.skills.length;
+  const rp=function(i,rad){ const a=-Math.PI/2+i*2*Math.PI/n; return [rcx+Math.cos(a)*rad, rcy+Math.sin(a)*rad]; };
+  for(const f of [0.33,0.66,1]){ ctx.strokeStyle=EDGE; ctx.lineWidth=f===1?3:2; ctx.beginPath(); d.skills.forEach(function(_,i){ const p=rp(i,RR*f); if(i) ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); }); ctx.closePath(); ctx.stroke(); }
+  ctx.lineWidth=2; ctx.strokeStyle='#2E2618'; d.skills.forEach(function(_,i){ const p=rp(i,RR); ctx.beginPath(); ctx.moveTo(rcx,rcy); ctx.lineTo(p[0],p[1]); ctx.stroke(); });
+  ctx.beginPath(); d.prof.forEach(function(v,i){ const p=rp(i,RR*Math.max(0.06,v/100)); if(i) ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); });
+  ctx.closePath(); ctx.fillStyle='rgba(255,122,26,0.24)'; ctx.fill(); ctx.strokeStyle=EMBER; ctx.lineWidth=5; ctx.lineJoin='round'; ctx.stroke();
+  d.prof.forEach(function(v,i){ const p=rp(i,RR*Math.max(0.06,v/100)); ctx.beginPath(); ctx.arc(p[0],p[1],i===d.best?12:6,0,Math.PI*2);
+    if(i===d.best){ ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=24; ctx.fillStyle=AMBER; ctx.fill(); ctx.restore(); } else { ctx.fillStyle=EMBER; ctx.fill(); } });
+  ctx.textBaseline='middle'; ctx.font='700 24px '+SANS;
+  d.skills.forEach(function(nm,i){ const p=rp(i,RR+34); ctx.fillStyle=(i===d.best)?AMBER:ASH; ctx.textAlign=Math.abs(p[0]-rcx)<8?'center':(p[0]>rcx?'left':'right'); ctx.fillText(nm.toUpperCase(), p[0], p[1]); });
   ctx.textBaseline='alphabetic'; ctx.textAlign='center';
 
-  /* the strongest skill, named */
-  ctx.fillStyle=ASH; ctx.font='700 24px '+SANS; spaced('STRONGEST SKILL', 540, 1034, 9);
-  const sk=String(d.skills[d.best]).toUpperCase(); let sf=66; ctx.font='700 '+sf+'px '+SERIF;
-  while(ctx.measureText(sk).width>820 && sf>40){ sf-=4; ctx.font='700 '+sf+'px '+SERIF; }
-  ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=36; ctx.fillStyle=AMBER; ctx.fillText(sk, 540, 1102); ctx.restore();
+  const ly = showIq ? 1068 : 1056, ny = showIq ? 1128 : 1120;
+  ctx.fillStyle=ASH; ctx.font='700 22px '+SANS; spaced('STRONGEST SKILL', 540, ly, 9);
+  ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=34; ctx.fillStyle=AMBER; ctx.font='700 62px '+SERIF; ctx.fillText(String(d.skills[d.best]).toUpperCase(), 540, ny); ctx.restore();
 
-  /* the ask */
-  ctx.fillStyle=BONE; ctx.font='italic 400 46px '+SERIF; ctx.fillText("What's your Game IQ?", 540, 1192);
+  ctx.fillStyle=BONE; ctx.font='italic 400 44px '+SERIF; ctx.fillText('How far can you climb?', 540, 1192);
   ctx.fillStyle=EMBER; ctx.font='700 34px '+SANS; ctx.fillText(d.url, 540, 1240);
   ctx.fillStyle=ASH; ctx.font='600 22px '+SANS; spaced('FREE  \u00b7  NO DOWNLOAD  \u00b7  NO ACCOUNT', 540, 1282, 4);
 }
-
-if(typeof module!=='undefined') module.exports={renderShareCard, renderIqCard};
+if(typeof module!=='undefined') module.exports={renderShareCard, renderProfileCard};
 
 /* ============ share a ranked result (win or loss) ============
    Additive: reads existing state, changes none of it. If anything here fails the
@@ -4515,51 +4646,75 @@ async function copyShareLink(){
   track('share_link_clicked', {kind:c.kind, station_number:c.station, copied:ok, share_ref:c.ref});
   if(msg) msg.textContent = ok ? 'Link copied. Paste it anywhere.' : 'Copy this link: '+c.url;
 }
-/* ---- share your Game IQ, from the IQ page: the number, how it is defined, the whole chart ---- */
-const IQ_SHARE_MIN_MOVES = 40;     /* below this the number is noise, so sharing stays locked */
-let __iqCtx = null, __iqFile = null;
-function iqCardData(){
+/* ---- share your PROFILE from the IQ page: what you achieved, your strongest skill and the whole chart ----
+   The Game IQ number and dial are added only if the player ticks "Show my Game IQ". */
+const PROFILE_MIN_MOVES = 40;      /* below this the skill chart is noise, so sharing stays locked */
+let __profCtx = null, __profFile = null, __profKey = '';
+/* the first score is remembered once, after enough moves, so progress can be shown ("+18 since I started") */
+function noteFirstScore(){
+  try{ if(LIFE.iq0===undefined && (LIFE.moves||0)>=PROFILE_MIN_MOVES){ const v=currentGameIQ(); if(v!==null) LIFE.iq0=v; } }catch(e){}
+}
+function profShowIq(){ const cb=$('iq-showiq'); return !!(cb && cb.checked); }
+function profileData(showIq){
+  let cleared=0, beat=false;
+  try{ cleared=Math.min(6,(LADDER&&LADDER.cleared)||0); beat=!!(TABLE_STATE&&TABLE_STATE.won); }catch(e){}
   const prof=skillProfile().map(function(v){ return Math.max(0,Math.min(100,+v||0)); });
   let best=0; prof.forEach(function(v,i){ if(v>prof[best]) best=i; });
-  return {iq:currentGameIQ(), prof:prof, skills:SKILLS, best:best, url:SHARE_BASE.replace(/^https?:\/\//,'').replace(/\/$/,'')};
+  const iq=currentGameIQ();
+  const gain=(iq!==null && LIFE.iq0!==undefined) ? iq-LIFE.iq0 : 0;
+  const nx=(!beat && cleared<6) ? STATIONS[cleared+1] : null;
+  return {cleared:cleared, beatMara:beat, iq:showIq?iq:null, delta:gain>0?gain:0, prof:prof, skills:SKILLS, best:best, zones:IQ_ZONES,
+          nextLabel: nx ? 'NEXT: STATION '+ROMAN[cleared+1]+' \u00b7 '+nx.foe.toUpperCase() : '',
+          url:SHARE_BASE.replace(/^https?:\/\//,'').replace(/\/$/,'')};
 }
-function iqCaption(){ const d=iqCardData(); return 'My Game IQ on M\u0100RA is '+d.iq+'. Strongest skill: '+SKILLS[d.best]+". What's yours? "+__iqCtx.url; }
-async function prepareIqCard(){
-  if(!__iqCtx) return;
+function profileCaption(showIq){
+  const d=profileData(showIq);
+  const head = d.beatMara ? 'I beat M\u0101ra in M\u0101RA.' : (d.cleared>=6 ? 'I reached M\u0101ra in M\u0101RA: 6 of 6 stations cleared.' : 'I have cleared '+d.cleared+' of 6 stations in M\u0101RA.');
+  return head+' Strongest skill: '+SKILLS[d.best]+'.'+(showIq && d.iq!==null ? ' Game IQ '+d.iq+'.' : '')+' How far can you climb? '+__profCtx.url;
+}
+async function prepareProfileCard(){
+  if(!__profCtx) return;
+  const showIq=profShowIq(), key=(showIq?'1':'0')+'|'+__profCtx.ref;
+  if(key===__profKey && __profFile) return;
+  __profKey=key; __profFile=null;
   try{
     const cv=document.createElement('canvas'); cv.width=1080; cv.height=1350;
     const ctx=cv.getContext('2d'); if(!ctx) return;
-    renderIqCard(ctx, iqCardData());
+    renderProfileCard(ctx, profileData(showIq));
     const b=await cardBlob(cv);
-    if(b) __iqFile=new File([b],'mara-game-iq.png',{type:'image/png'});
+    if(b && key===__profKey) __profFile=new File([b],'mara-profile.png',{type:'image/png'});
   }catch(e){}
 }
-function iqTipSet(open){ const t=$('iq-tip'), b=$('iq-iqi'); if(!t||!b) return; t.hidden=!open; b.setAttribute('aria-expanded', open?'true':'false'); }
-function paintIqShare(){
+function profTipSet(open){ const t=$('iq-tip'), b=$('iq-iqi'); if(!t||!b) return; t.hidden=!open; b.setAttribute('aria-expanded', open?'true':'false'); }
+function paintProfileShare(){
   const box=$('iq-share'), lock=$('iq-lock'); if(!box||!lock) return;
-  iqTipSet(false); const m=$('iq-sharemsg'); if(m) m.textContent=''; __iqFile=null;
-  const moves=LIFE.moves||0, iq=currentGameIQ();
-  const ok = SHARE_ENABLED && iq!==null && moves>=IQ_SHARE_MIN_MOVES;
+  profTipSet(false); const m=$('iq-sharemsg'); if(m) m.textContent=''; __profFile=null; __profKey='';
+  const cb=$('iq-showiq'); if(cb) cb.checked=false;            /* private unless the player opts in, every time */
+  let cleared=0; try{ cleared=Math.min(6,(LADDER&&LADDER.cleared)||0); }catch(e){}
+  const moves=LIFE.moves||0;
+  let msg='';
+  if(cleared<1) msg='Clear your first station to unlock your profile card.';
+  else if(moves<PROFILE_MIN_MOVES) msg='Play about '+(PROFILE_MIN_MOVES-moves)+' more moves to unlock your profile card.';
+  const ok = SHARE_ENABLED && !msg;
   box.hidden=!ok; lock.hidden=ok;
-  if(!ok){
-    lock.textContent = moves ? 'Play about '+(IQ_SHARE_MIN_MOVES-moves)+' more moves to unlock sharing your Game IQ.' : 'Play a few games to unlock sharing your Game IQ.';
-    __iqCtx=null; return;
-  }
-  const ref=shareRef(); __iqCtx={ref:ref, url:SHARE_BASE+'?utm_source=share&r=i&ref='+ref};   /* no score, no skills in the link */
-  track('share_card_shown', {kind:'iq_profile'});
-  prepareIqCard();
+  if(!ok){ lock.textContent=msg; __profCtx=null; return; }
+  const ref=shareRef(); __profCtx={ref:ref, cleared:cleared, url:SHARE_BASE+'?utm_source=share&r=p&ref='+ref};   /* no score, no skills in the link */
+  track('share_card_shown', {kind:'profile', stations_cleared:cleared});
+  prepareProfileCard();
 }
-async function shareIq(){
-  const c=__iqCtx; if(!c) return;
+async function shareProfile(){
+  const c=__profCtx; if(!c) return;
+  const showIq=profShowIq();
   const copyP=copyText(c.url);
-  if(!__iqFile) await prepareIqCard();
-  /* analytics learns that an IQ card was shared, never the score or the skills */
-  return runShare({copyP:copyP, file:__iqFile, caption:iqCaption(), url:c.url, msg:$('iq-sharemsg'), props:{kind:'iq_profile', includes_iq:true, share_ref:c.ref}});
+  if(!__profFile || __profKey.charAt(0)!==(showIq?'1':'0')) await prepareProfileCard();
+  /* analytics learns that a profile was shared and whether the IQ box was ticked, never the score or the skills */
+  return runShare({copyP:copyP, file:__profFile, caption:profileCaption(showIq), url:c.url, msg:$('iq-sharemsg'),
+                   props:{kind:'profile', includes_iq:showIq, stations_cleared:c.cleared, share_ref:c.ref}});
 }
-async function copyIqLink(){
-  const c=__iqCtx; if(!c) return; const msg=$('iq-sharemsg');
+async function copyProfileLink(){
+  const c=__profCtx; if(!c) return; const msg=$('iq-sharemsg');
   const ok=await copyText(c.url);
-  track('share_link_clicked', {kind:'iq_profile', copied:ok, share_ref:c.ref});
+  track('share_link_clicked', {kind:'profile', copied:ok, stations_cleared:c.cleared, share_ref:c.ref});
   if(msg) msg.textContent = ok ? 'Link copied. Paste it anywhere.' : 'Copy this link: '+c.url;
 }
 function iqTip(open){
@@ -4593,8 +4748,9 @@ function shareOnVerdict(won){
   const cp=$('v-copybtn'); if(cp) cp.onclick=copyShareLink;
   if(cb) cb.onchange=function(){ __cardKey=''; prepareCard(); };
   if(i) i.onclick=function(){ iqTip($('v-iqtip').hidden); };
-  const ib=$('iq-sharebtn'), ic=$('iq-copybtn'), ii=$('iq-iqi');
-  if(ib) ib.onclick=shareIq; if(ic) ic.onclick=copyIqLink; if(ii) ii.onclick=function(){ iqTipSet($('iq-tip').hidden); };
+  const ib=$('iq-sharebtn'), ic=$('iq-copybtn'), ii=$('iq-iqi'), sc=$('iq-showiq');
+  if(ib) ib.onclick=shareProfile; if(ic) ic.onclick=copyProfileLink; if(ii) ii.onclick=function(){ profTipSet($('iq-tip').hidden); };
+  if(sc) sc.onchange=function(){ __profKey=''; prepareProfileCard(); };
 })();
 
 /* someone arriving from a shared card sees a short banner; everyone else sees nothing new */
@@ -4602,17 +4758,17 @@ function shareOnVerdict(won){
   try{
     const q=new URLSearchParams(location.search);
     const s=parseInt(q.get('s'),10), r=q.get('r'), ref=(q.get('ref')||'').replace(/[^a-z0-9]/gi,'').slice(0,12);
-    const isIq=(r==='i');
-    if(!isIq && (!(s>=1 && s<=6) || (r!=='w' && r!=='l') || !STATIONS[s])) return;
+    const isIq=(r==='i'), isProf=(r==='p');
+    if(!isIq && !isProf && (!(s>=1 && s<=6) || (r!=='w' && r!=='l') || !STATIONS[s])) return;
     const home=document.getElementById('p-home'); if(!home) return;
     const el=document.createElement('div'); el.id='challenge'; el.setAttribute('role','status');
     const t=document.createElement('span'), x=document.createElement('button');
-    t.textContent = isIq ? "A friend shared their Game IQ. What's yours?"
+    t.textContent = isProf ? 'A friend shared their M\u0100RA profile. How far can you climb?' : isIq ? "A friend shared their Game IQ. What's yours?"
                   : (r==='w' ? 'A friend cleared Station '+ROMAN[s]+' ('+STATIONS[s].foe+'). Can you?'
                              : 'A friend lost to Station '+ROMAN[s]+' ('+STATIONS[s].foe+'). Think you can do better?');
     x.type='button'; x.setAttribute('aria-label','Dismiss'); x.textContent='\u00d7'; x.onclick=function(){ el.remove(); };
     el.appendChild(t); el.appendChild(x); home.insertBefore(el, home.firstChild);
-    setTimeout(function(){ track('challenge_opened', isIq ? {from_result:'iq', share_ref:ref} : {station_number:s, from_result:r==='w'?'win':'loss', share_ref:ref}); }, 120);
+    setTimeout(function(){ track('challenge_opened', (isIq||isProf) ? {from_result:isProf?'profile':'iq', share_ref:ref} : {station_number:s, from_result:r==='w'?'win':'loss', share_ref:ref}); }, 120);
   }catch(e){}
 })();
 
