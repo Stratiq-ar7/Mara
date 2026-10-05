@@ -1277,6 +1277,22 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
 .verdict .vsharemsg{margin:9px 0 0;font-size:12px;color:var(--amber);text-align:center}
 @media (max-height:640px){.verdict .vport{display:none}.verdict h2{font-size:clamp(44px,14vw,66px)}.verdict .vbtns{margin-top:16px}.verdict .vshare{margin-top:10px}}
 @media (max-height:600px){.verdict .vwho{display:none}.verdict .vstn{margin-top:10px}.verdict .vsay{margin-top:10px;font-size:15px}.verdict h2{font-size:clamp(40px,13vw,56px)}}
+/* share your Game IQ (IQ page) */
+.iqshare{margin-top:20px}
+.iqshare[hidden]{display:none}
+.iqshare .vsharerow{display:flex;gap:8px}
+.iqshare #iq-sharebtn,.iqshare #iq-copybtn{min-height:48px;touch-action:manipulation;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.iqshare #iq-sharebtn{flex:1;min-width:0;background:var(--ember);color:#160D03;border:0;-webkit-text-fill-color:#160D03}
+.iqshare #iq-copybtn{flex:0 0 auto;padding:0 16px;background:none;border:1px solid var(--edge);color:var(--amber);-webkit-text-fill-color:currentColor;font-weight:600}
+.iqshare .iqrow{display:flex;align-items:center;justify-content:space-between;margin-top:4px;font-size:13px;color:var(--ash)}
+.iqshare .viqi{width:44px;height:44px;flex:none;padding:0;border:0;background:none;color:var(--ash);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-text-fill-color:currentColor;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.iqshare .viqi span{width:24px;height:24px;border-radius:50%;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font:italic 700 13px ui-serif,Georgia,serif}
+.iqshare .viqi:hover span,.iqshare .viqi[aria-expanded="true"] span{border-color:var(--ember);color:var(--ember)}
+.iqshare .viqtip{margin:4px 0 0;padding:10px 12px;border:1px solid var(--edge);border-radius:8px;background:var(--panel);font-size:12px;line-height:1.5;color:#CFC4B3}
+.iqshare .viqtip[hidden]{display:none}
+.iqshare .vsharemsg{margin:9px 0 0;font-size:12px;color:var(--amber);text-align:center}
+.iqlock{margin:18px 0 0;font-size:13px;color:var(--ash);text-align:center;line-height:1.5}
+.iqlock[hidden]{display:none}
 #challenge{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding:10px 14px;border:1px solid rgba(255,122,26,.4);border-radius:10px;background:var(--emberdim);color:var(--bone);font-size:13.5px;line-height:1.4}
 #challenge button{background:none;border:0;color:var(--ash);font-size:22px;line-height:1;cursor:pointer;min-width:44px;min-height:44px;margin:-10px -10px -10px 0;padding:0;-webkit-text-fill-color:currentColor;touch-action:manipulation}
 </style>
@@ -1592,7 +1608,19 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
       <span class="chips"><span class="chip2">Planning</span><span class="chip2">Space</span><span class="chip2">Defence</span></span>
       <span class="iqv2" id="iq-amazons">&mdash;</span></div>
     <p class="growtip" id="growtip" style="display:none"></p>
-    <p class="privnote">These numbers are yours alone. They are never published or compared against anyone else.</p>
+    <div class="iqshare" id="iq-share" hidden>
+        <div class="vsharerow">
+          <button type="button" id="iq-sharebtn">Share your Game IQ</button>
+          <button type="button" id="iq-copybtn">Copy link</button>
+        </div>
+        <div class="iqrow"><span>What gets shared</span>
+          <button type="button" class="viqi" id="iq-iqi" aria-label="About sharing your Game IQ" aria-expanded="false" aria-controls="iq-tip"><span aria-hidden="true">i</span></button>
+        </div>
+        <p class="viqtip" id="iq-tip" role="note" hidden>Your Game IQ and skill chart stay private by default. If you tap Share, they are drawn onto an image that anyone you send it to will see. It is a snapshot of the moves played in this browser so far. Nothing is uploaded to us, and we only count that you shared, never your score or your skills.</p>
+        <p class="vsharemsg" id="iq-sharemsg" aria-live="polite"></p>
+      </div>
+      <p class="iqlock" id="iq-lock" hidden></p>
+      <p class="privnote">These numbers are yours alone. They stay on your device unless you choose to share them, and they are never compared against anyone else.</p>
   </div>
 
 </section>
@@ -4222,6 +4250,7 @@ function goto(p){
   document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.p===lit));
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
   $('p-'+p).classList.add('on');
+  if(p==='table'){ try{ paintIqShare(); }catch(e){} }
   toTop();
 }
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{
@@ -4310,7 +4339,90 @@ function renderShareCard(ctx, d, kimg){
   ctx.fillStyle=EMBER; ctx.font='700 34px '+SANS; ctx.fillText(d.url, 540, 1240);
   ctx.fillStyle=ASH; ctx.font='600 22px '+SANS; spaced('FREE  \u00b7  NO DOWNLOAD  \u00b7  NO ACCOUNT', 540, 1282, 4);
 }
-if(typeof module!=='undefined') module.exports={renderShareCard};
+
+/* ---- MARA Game IQ card: the number, how it is defined, and the whole six-skill chart ----
+   d = { iq, prof:[six numbers 0..100], skills:[six names], best:index of the strongest, url } */
+function renderIqCard(ctx, d){
+  const W=1080, H=1350;
+  const SERIF='"Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif';
+  const SANS='"Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  const EMBER='#FF7A1A', AMBER='#FFB03A', BONE='#F0E8DC', ASH='#8A7F70', VOID='#0B0A08', EDGE='#3A3020';
+  function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function spaced(text, cx, y, sp){
+    const chars=[...text]; const ws=chars.map(c=>ctx.measureText(c).width);
+    let w=ws.reduce((a,b)=>a+b,0)+sp*(chars.length-1), x=cx-w/2;
+    ctx.textAlign='left'; chars.forEach((c,i)=>{ ctx.fillText(c,x,y); x+=ws[i]+sp; }); ctx.textAlign='center';
+  }
+
+  /* ground and glow */
+  ctx.fillStyle=VOID; ctx.fillRect(0,0,W,H);
+  let g=ctx.createRadialGradient(540,340,40,540,340,820);
+  g.addColorStop(0,'rgba(255,176,58,0.22)'); g.addColorStop(1,'rgba(11,10,8,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  g=ctx.createLinearGradient(0,H-340,0,H); g.addColorStop(0,'rgba(11,10,8,0)'); g.addColorStop(1,'rgba(40,18,4,0.55)');
+  ctx.fillStyle=g; ctx.fillRect(0,H-340,W,340);
+  ctx.strokeStyle='rgba(255,122,26,0.32)'; ctx.lineWidth=2; rr(36,36,W-72,H-72,26); ctx.stroke();
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+
+  /* wordmark and title */
+  ctx.fillStyle=EMBER; ctx.font='700 52px '+SERIF; spaced('M\u0100RA', 540, 104, 20);
+  ctx.fillStyle=ASH; ctx.font='700 26px '+SANS; spaced('MY GAME IQ', 540, 170, 10);
+
+  /* the ring, filled to the score, with the number inside */
+  const cx=540, cy=312, r=92, iq=Math.max(0,Math.min(100,+d.iq||0));
+  ctx.lineWidth=16; ctx.lineCap='round';
+  ctx.strokeStyle=EDGE; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+  ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=24; ctx.strokeStyle=AMBER;
+  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*iq/100); ctx.stroke(); ctx.restore();
+  ctx.lineCap='butt';
+  let nf=104; ctx.font='700 '+nf+'px '+SERIF;
+  while(ctx.measureText(String(d.iq)).width>140 && nf>60){ nf-=6; ctx.font='700 '+nf+'px '+SERIF; }
+  ctx.fillStyle=BONE; ctx.fillText(String(d.iq), cx, cy+nf*0.36);
+
+  /* how it is defined */
+  ctx.fillStyle='#E4DACB'; ctx.font='italic 400 32px '+SERIF;
+  ctx.fillText('How close your moves are', 540, 488); ctx.fillText('to the best move available.', 540, 528);
+
+  /* the whole six-skill chart, same geometry as the IQ page */
+  const rcx=540, rcy=770, R=150, n=d.skills.length;
+  const pt=function(i,rad){ const a=-Math.PI/2+i*2*Math.PI/n; return [rcx+Math.cos(a)*rad, rcy+Math.sin(a)*rad]; };
+  for(const f of [0.33,0.66,1]){
+    ctx.strokeStyle=EDGE; ctx.lineWidth=f===1?3:2; ctx.beginPath();
+    d.skills.forEach(function(_,i){ const p=pt(i,R*f); if(i) ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); });
+    ctx.closePath(); ctx.stroke();
+  }
+  ctx.lineWidth=2; ctx.strokeStyle='#2E2618';
+  d.skills.forEach(function(_,i){ const p=pt(i,R); ctx.beginPath(); ctx.moveTo(rcx,rcy); ctx.lineTo(p[0],p[1]); ctx.stroke(); });
+  ctx.beginPath();
+  d.prof.forEach(function(v,i){ const p=pt(i,R*Math.max(0.06,v/100)); if(i) ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); });
+  ctx.closePath(); ctx.fillStyle='rgba(255,122,26,0.24)'; ctx.fill();
+  ctx.strokeStyle=EMBER; ctx.lineWidth=5; ctx.lineJoin='round'; ctx.stroke();
+  d.prof.forEach(function(v,i){
+    const p=pt(i,R*Math.max(0.06,v/100)); ctx.beginPath(); ctx.arc(p[0],p[1],i===d.best?13:7,0,Math.PI*2);
+    if(i===d.best){ ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=26; ctx.fillStyle=AMBER; ctx.fill(); ctx.restore(); }
+    else { ctx.fillStyle=EMBER; ctx.fill(); }
+  });
+  ctx.textBaseline='middle'; ctx.font='700 27px '+SANS;
+  d.skills.forEach(function(nm,i){
+    const p=pt(i,R+38); ctx.fillStyle=(i===d.best)?AMBER:ASH;
+    ctx.textAlign = Math.abs(p[0]-rcx)<8 ? 'center' : (p[0]>rcx ? 'left' : 'right');
+    ctx.fillText(nm.toUpperCase(), p[0], p[1]);
+  });
+  ctx.textBaseline='alphabetic'; ctx.textAlign='center';
+
+  /* the strongest skill, named */
+  ctx.fillStyle=ASH; ctx.font='700 24px '+SANS; spaced('STRONGEST SKILL', 540, 1034, 9);
+  const sk=String(d.skills[d.best]).toUpperCase(); let sf=66; ctx.font='700 '+sf+'px '+SERIF;
+  while(ctx.measureText(sk).width>820 && sf>40){ sf-=4; ctx.font='700 '+sf+'px '+SERIF; }
+  ctx.save(); ctx.shadowColor=AMBER; ctx.shadowBlur=36; ctx.fillStyle=AMBER; ctx.fillText(sk, 540, 1102); ctx.restore();
+
+  /* the ask */
+  ctx.fillStyle=BONE; ctx.font='italic 400 46px '+SERIF; ctx.fillText("What's your Game IQ?", 540, 1192);
+  ctx.fillStyle=EMBER; ctx.font='700 34px '+SANS; ctx.fillText(d.url, 540, 1240);
+  ctx.fillStyle=ASH; ctx.font='600 22px '+SANS; spaced('FREE  \u00b7  NO DOWNLOAD  \u00b7  NO ACCOUNT', 540, 1282, 4);
+}
+
+if(typeof module!=='undefined') module.exports={renderShareCard, renderIqCard};
 
 /* ============ share a ranked result (win or loss) ============
    Additive: reads existing state, changes none of it. If anything here fails the
@@ -4365,30 +4477,35 @@ function copyText(t){
   })();
 }
 
+/* one share flow for every card: copy the link, tell analytics, native share or download, report the outcome */
+async function runShare(o){
+  const linkCopied=await o.copyP, file=o.file, msg=o.msg;
+  const canNative=!!(file && navigator.canShare && navigator.canShare({files:[file]}));
+  const method=canNative?'native':(file?'download':'copy');
+  const props=Object.assign({method:method, link_copied:linkCopied}, o.props);
+  track('share_image_clicked', props);
+  if(msg) msg.textContent = linkCopied ? 'Link copied too. Paste it with your image if your app drops the caption.' : '';
+  if(canNative){
+    try{ await navigator.share({files:[file], text:o.caption}); track('share_image_completed', props); return; }
+    catch(e){ if(e && e.name==='AbortError'){ track('share_image_cancelled', props); return; } }
+  }
+  if(file){
+    try{ const a=document.createElement('a'), u=URL.createObjectURL(file); a.href=u; a.download=file.name||'mara.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(u);},4000); }catch(e){}
+  }
+  const copied=await copyText(o.caption);
+  if(msg) msg.textContent = file ? (copied?'Image saved. Caption and link copied.':'Image saved. Link: '+o.url)
+                                 : (copied?'Caption and link copied.':'Link: '+o.url);
+  track('share_image_completed', props);
+}
+
 async function shareResult(){
   const c=__shareCtx; if(!c) return;
   const useIQ=iqWanted();
   const copyP=copyText(c.url);                    /* starts inside the tap: the link is on the clipboard too, for apps that drop an image's caption */
   if(!__cardFile || __cardKey.charAt(0)!==(useIQ?'1':'0')) await prepareCard();
-  const linkCopied=await copyP;
-  const file=__cardFile, caption=shareCaption(c), msg=$('v-sharemsg');
-  const canNative=!!(file && navigator.canShare && navigator.canShare({files:[file]}));
-  const method=canNative?'native':(file?'download':'copy');
   /* analytics records that the IQ box was ticked, never the number */
-  const props={kind:c.kind, station_number:c.station, method:method, includes_iq:useIQ, link_copied:linkCopied, share_ref:c.ref};
-  track('share_image_clicked', props);
-  if(msg) msg.textContent = linkCopied ? 'Link copied too. Paste it with your image if your app drops the caption.' : '';
-  if(canNative){
-    try{ await navigator.share({files:[file], text:caption}); track('share_image_completed', props); return; }
-    catch(e){ if(e && e.name==='AbortError'){ track('share_image_cancelled', props); return; } }
-  }
-  if(file){
-    try{ const a=document.createElement('a'), u=URL.createObjectURL(file); a.href=u; a.download='mara-result.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(u);},4000); }catch(e){}
-  }
-  const copied=await copyText(caption);
-  if(msg) msg.textContent = file ? (copied?'Image saved. Caption and link copied.':'Image saved. Link: '+c.url)
-                                 : (copied?'Caption and link copied.':'Link: '+c.url);
-  track('share_image_completed', props);
+  return runShare({copyP:copyP, file:__cardFile, caption:shareCaption(c), url:c.url, msg:$('v-sharemsg'),
+                   props:{kind:c.kind, station_number:c.station, includes_iq:useIQ, share_ref:c.ref}});
 }
 
 /* the explicit "Copy link" button: just the link, for pasting into a bio, story sticker or comment */
@@ -4396,6 +4513,53 @@ async function copyShareLink(){
   const c=__shareCtx; if(!c) return; const msg=$('v-sharemsg');
   const ok=await copyText(c.url);
   track('share_link_clicked', {kind:c.kind, station_number:c.station, copied:ok, share_ref:c.ref});
+  if(msg) msg.textContent = ok ? 'Link copied. Paste it anywhere.' : 'Copy this link: '+c.url;
+}
+/* ---- share your Game IQ, from the IQ page: the number, how it is defined, the whole chart ---- */
+const IQ_SHARE_MIN_MOVES = 40;     /* below this the number is noise, so sharing stays locked */
+let __iqCtx = null, __iqFile = null;
+function iqCardData(){
+  const prof=skillProfile().map(function(v){ return Math.max(0,Math.min(100,+v||0)); });
+  let best=0; prof.forEach(function(v,i){ if(v>prof[best]) best=i; });
+  return {iq:currentGameIQ(), prof:prof, skills:SKILLS, best:best, url:SHARE_BASE.replace(/^https?:\/\//,'').replace(/\/$/,'')};
+}
+function iqCaption(){ const d=iqCardData(); return 'My Game IQ on M\u0100RA is '+d.iq+'. Strongest skill: '+SKILLS[d.best]+". What's yours? "+__iqCtx.url; }
+async function prepareIqCard(){
+  if(!__iqCtx) return;
+  try{
+    const cv=document.createElement('canvas'); cv.width=1080; cv.height=1350;
+    const ctx=cv.getContext('2d'); if(!ctx) return;
+    renderIqCard(ctx, iqCardData());
+    const b=await cardBlob(cv);
+    if(b) __iqFile=new File([b],'mara-game-iq.png',{type:'image/png'});
+  }catch(e){}
+}
+function iqTipSet(open){ const t=$('iq-tip'), b=$('iq-iqi'); if(!t||!b) return; t.hidden=!open; b.setAttribute('aria-expanded', open?'true':'false'); }
+function paintIqShare(){
+  const box=$('iq-share'), lock=$('iq-lock'); if(!box||!lock) return;
+  iqTipSet(false); const m=$('iq-sharemsg'); if(m) m.textContent=''; __iqFile=null;
+  const moves=LIFE.moves||0, iq=currentGameIQ();
+  const ok = SHARE_ENABLED && iq!==null && moves>=IQ_SHARE_MIN_MOVES;
+  box.hidden=!ok; lock.hidden=ok;
+  if(!ok){
+    lock.textContent = moves ? 'Play about '+(IQ_SHARE_MIN_MOVES-moves)+' more moves to unlock sharing your Game IQ.' : 'Play a few games to unlock sharing your Game IQ.';
+    __iqCtx=null; return;
+  }
+  const ref=shareRef(); __iqCtx={ref:ref, url:SHARE_BASE+'?utm_source=share&r=i&ref='+ref};   /* no score, no skills in the link */
+  track('share_card_shown', {kind:'iq_profile'});
+  prepareIqCard();
+}
+async function shareIq(){
+  const c=__iqCtx; if(!c) return;
+  const copyP=copyText(c.url);
+  if(!__iqFile) await prepareIqCard();
+  /* analytics learns that an IQ card was shared, never the score or the skills */
+  return runShare({copyP:copyP, file:__iqFile, caption:iqCaption(), url:c.url, msg:$('iq-sharemsg'), props:{kind:'iq_profile', includes_iq:true, share_ref:c.ref}});
+}
+async function copyIqLink(){
+  const c=__iqCtx; if(!c) return; const msg=$('iq-sharemsg');
+  const ok=await copyText(c.url);
+  track('share_link_clicked', {kind:'iq_profile', copied:ok, share_ref:c.ref});
   if(msg) msg.textContent = ok ? 'Link copied. Paste it anywhere.' : 'Copy this link: '+c.url;
 }
 function iqTip(open){
@@ -4429,6 +4593,8 @@ function shareOnVerdict(won){
   const cp=$('v-copybtn'); if(cp) cp.onclick=copyShareLink;
   if(cb) cb.onchange=function(){ __cardKey=''; prepareCard(); };
   if(i) i.onclick=function(){ iqTip($('v-iqtip').hidden); };
+  const ib=$('iq-sharebtn'), ic=$('iq-copybtn'), ii=$('iq-iqi');
+  if(ib) ib.onclick=shareIq; if(ic) ic.onclick=copyIqLink; if(ii) ii.onclick=function(){ iqTipSet($('iq-tip').hidden); };
 })();
 
 /* someone arriving from a shared card sees a short banner; everyone else sees nothing new */
@@ -4436,15 +4602,17 @@ function shareOnVerdict(won){
   try{
     const q=new URLSearchParams(location.search);
     const s=parseInt(q.get('s'),10), r=q.get('r'), ref=(q.get('ref')||'').replace(/[^a-z0-9]/gi,'').slice(0,12);
-    if(!(s>=1 && s<=6) || (r!=='w' && r!=='l') || !STATIONS[s]) return;
+    const isIq=(r==='i');
+    if(!isIq && (!(s>=1 && s<=6) || (r!=='w' && r!=='l') || !STATIONS[s])) return;
     const home=document.getElementById('p-home'); if(!home) return;
     const el=document.createElement('div'); el.id='challenge'; el.setAttribute('role','status');
     const t=document.createElement('span'), x=document.createElement('button');
-    t.textContent = r==='w' ? 'A friend cleared Station '+ROMAN[s]+' ('+STATIONS[s].foe+'). Can you?'
-                            : 'A friend lost to Station '+ROMAN[s]+' ('+STATIONS[s].foe+'). Think you can do better?';
+    t.textContent = isIq ? "A friend shared their Game IQ. What's yours?"
+                  : (r==='w' ? 'A friend cleared Station '+ROMAN[s]+' ('+STATIONS[s].foe+'). Can you?'
+                             : 'A friend lost to Station '+ROMAN[s]+' ('+STATIONS[s].foe+'). Think you can do better?');
     x.type='button'; x.setAttribute('aria-label','Dismiss'); x.textContent='\u00d7'; x.onclick=function(){ el.remove(); };
     el.appendChild(t); el.appendChild(x); home.insertBefore(el, home.firstChild);
-    setTimeout(function(){ track('challenge_opened', {station_number:s, from_result:r==='w'?'win':'loss', share_ref:ref}); }, 120);
+    setTimeout(function(){ track('challenge_opened', isIq ? {from_result:'iq', share_ref:ref} : {station_number:s, from_result:r==='w'?'win':'loss', share_ref:ref}); }, 120);
   }catch(e){}
 })();
 
