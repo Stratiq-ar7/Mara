@@ -3245,18 +3245,22 @@ function legalAll(side){
 
 /* ---- The strongest Brandubh AI: a real look-ahead search. ----
    Used ONLY at the Ultimate level, and ONLY when the AI plays the king's side (the defenders), where the old one-reply-ahead AI was
-   weakest: stand-in players beat it half the time even as attackers. Measured: with this search, stand-ins won 0 of 30 games.
+   weakest: stand-in players beat it half the time even as attackers. Measured: with this search, stand-ins won 0 of 56 games.
    It is NOT used when the AI plays the attackers. Measured: when both sides play well the king's side wins almost every game
    (strong search versus strong search: the defenders won 50 of 52), so the attackers cannot be made unbeatable under these rules.
-   It searches several moves deep with alpha-beta pruning, deepening one move at a time until a time budget runs out, then plays the best
-   move of the last depth it finished. Moves worth the same are picked at random so games are not identical. */
-const BR_STRONG={maxDepth:4, budgetMs:600, tie:3};   /* maxDepth is the strength dial: 2 is the old level, 3 is already very hard, 4 is harder still */
+   It searches 3 moves deep with alpha-beta pruning, one move deeper at a time, and that depth ALWAYS completes on any device, so the
+   difficulty is the same everywhere. (A 4th move can be enabled with BR_STRONG.maxDepth; it is attempted only when it is predicted to fit
+   the clock.) Moves worth the same are picked at random so games are not identical. */
+const BR_STRONG={maxDepth:3, minDepth:3, budgetMs:600, tie:3, lastDepth:0, lapse:0.25};
+/* lapse is THE DIFFICULTY DIAL: the chance per move that the AI plays the old, shallow way (one reply ahead) and so can overlook a threat.
+   0 = hardest (stand-ins win about 2%). 0.25 (one move in four) is calibrated so a decent (Pro-like) stand-in player wins about 10% of games at Station VI.
+   maxDepth is 3 on purpose: raising it to 4 would let faster devices play stronger and so shift the win rate. minDepth is the floor that always completes. */
 function brStrongPick(side){
   const t0=performance.now();
   const A=G.sideA.key, other=function(s){ return s===A?G.sideB.key:A; };
   const root=G.all(st,side); if(!root.length) return null;
-  let nodes=0, aborted=false;
-  const out=function(){ return BR_STRONG.budgetMs!=null && ((++nodes)&31)===0 && (performance.now()-t0)>BR_STRONG.budgetMs; };
+  let nodes=0, aborted=false, curD=1;
+  const out=function(){ return BR_STRONG.budgetMs!=null && curD>BR_STRONG.minDepth && ((++nodes)&31)===0 && (performance.now()-t0)>BR_STRONG.budgetMs; };
   function nm(b,sd,depth,alpha,beta){
     const ms=G.all(b,sd); if(!ms.length) return -5000-depth;                 /* a side with no move loses */
     const list=ms.map(function(m){ return {m:m, v:G.score(b,m,sd)}; }).sort(function(x,y){ return y.v-x.v; });
@@ -3272,11 +3276,15 @@ function brStrongPick(side){
     }
     return best;
   }
+  BR_STRONG.lastDepth=1;
   const ordered=root.map(function(m){ return {m:m, v:G.score(st,m,side)}; }).sort(function(x,y){ return y.v-x.v; });
   if(ordered[0].v>=900) return ordered[0].m;                                  /* take a win on the spot */
   let pick=ordered.filter(function(e){ return e.v>=ordered[0].v-1e-9; });       /* depth 1 result, always available */
+  let lastCost=0;
   for(let d=2; d<=BR_STRONG.maxDepth; d++){
-    aborted=false; let best=-Infinity; const vals=[];
+    if(d>BR_STRONG.minDepth && BR_STRONG.budgetMs!=null && (performance.now()-t0)+lastCost*4>BR_STRONG.budgetMs) break;   /* an extra move of look-ahead costs about 4 times the last one */
+    curD=d; aborted=false; const dStart=performance.now();
+    let best=-Infinity; const vals=[];
     for(let i=0;i<ordered.length;i++){
       const e=ordered[i]; let val;
       if(e.v>=900) val=5000+d; else if(e.v<=-900) val=-5000-d;
@@ -3284,10 +3292,11 @@ function brStrongPick(side){
       if(aborted) break;
       vals.push([e,val]); if(val>best) best=val;
     }
-    if(aborted && d>2) break;                                                 /* out of time: keep the last finished depth */
-    if(aborted) { /* depth 2 must always finish, so judge it without a clock */ aborted=false; BR_STRONG.__force=true; }
+    if(aborted) break;                                                        /* only the optional deeper look can be cut off: keep the last finished depth */
+    lastCost=performance.now()-dStart;
     const top=vals.filter(function(x){ return x[1]>=best-BR_STRONG.tie; }).map(function(x){ return x[0]; });
-    if(vals.length===ordered.length && top.length) pick=top;
+    if(top.length) pick=top;
+    BR_STRONG.lastDepth=d;
     ordered.sort(function(x,y){ const vx=(vals.find(function(a){return a[0]===x;})||[0,-1e9])[1], vy=(vals.find(function(a){return a[0]===y;})||[0,-1e9])[1]; return vy-vx; });
     if(best>=5000) break;                                                     /* a forced win is found: stop looking */
   }
@@ -3297,7 +3306,7 @@ function brStrongPick(side){
 /* --- AI --- */
 function aiPick(side){
   const ms=legalAll(side);if(!ms.length)return null;
-  if(G.id==='brandubh'&&diff===4&&side===G.sideB.key){ const sm=brStrongPick(side); if(sm)return sm; }   // Ultimate Brandubh, AI on the king's side: the strong search
+  if(G.id==='brandubh'&&diff===4&&side===G.sideB.key&&!(BR_STRONG.lapse>0&&Math.random()<BR_STRONG.lapse)){ const sm=brStrongPick(side); if(sm)return sm; }   // Ultimate Brandubh, AI on the king's side: the strong search
   const arr=rank(ms,side);
   const bl=DIFF[diff].blunder;
   if(bl>0&&Math.random()<bl){
