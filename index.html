@@ -1277,6 +1277,8 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
 .verdict .vsharemsg{margin:9px 0 0;font-size:12px;color:var(--amber);text-align:center}
 @media (max-height:640px){.verdict .vport{display:none}.verdict h2{font-size:clamp(44px,14vw,66px)}.verdict .vbtns{margin-top:16px}.verdict .vshare{margin-top:10px}}
 @media (max-height:600px){.verdict .vwho{display:none}.verdict .vstn{margin-top:10px}.verdict .vsay{margin-top:10px;font-size:15px}.verdict h2{font-size:clamp(40px,13vw,56px)}}
+.lkdry{margin:8px 0 0;text-align:center;font-size:12px;color:var(--ash);line-height:1.4}
+.lkdry.hot{color:var(--amber)}
 /* the Game IQ dial */
 .iqgauge-wrap{display:flex;justify-content:center;margin:14px 0 2px}
 #iqgauge{width:100%;max-width:340px;height:auto}
@@ -1605,12 +1607,12 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
       <p class="iqwhere" id="iq-where"></p>
       <p class="iqnext" id="iq-next"></p>
       <div class="iqlegend" id="iq-legend"></div>
-      <p class="iqnote">Random moves means picking any legal move at random. The marks are spaced evenly, and the number is your true score.</p>
+      <p class="iqnote">Random moves means picking any legal move at random. The marks are spaced evenly, and the number is your true score. Your final match against Māra is not counted here, because that game cannot be scored on the same ruler.</p>
       <p class="iqclear" id="iq-cleared"></p>
 
   <div class="skillbox">
     <h3>What each game builds</h3>
-    <p class="lede">Six measures, drawn from how accurately you play. Games below show which ones they exercise most.</p>
+    <p class="lede">Six measures, each built from your accuracy in the games that lean on it, so they show how accurately you play those games, not a direct reading of the skill. Games below show which ones they exercise most.</p>
     <svg class="scatter" id="radar" viewBox="0 0 200 180" role="img"
       aria-label="Your skill profile across six measures, drawn from how accurately you play each game">
       <g id="radar-rings"></g>
@@ -1622,7 +1624,7 @@ tbody tr.inzone td:first-child{color:var(--ember);font-weight:800}
       <span class="chips"><span class="chip2">Defence</span><span class="chip2">Space</span><span class="chip2">Attack</span></span>
       <span class="iqv2" id="iq-brandubh">&mdash;</span></div>
     <div class="skillrow"><span class="sg">Bagh Chal</span>
-      <span class="chips"><span class="chip2">Sacrifice</span><span class="chip2">Defence</span><span class="chip2">Planning</span></span>
+      <span class="chips"><span class="chip2">Attack</span><span class="chip2">Defence</span><span class="chip2">Traps</span></span>
       <span class="iqv2" id="iq-baghchal">&mdash;</span></div>
     <div class="skillrow"><span class="sg">Amazons</span>
       <span class="chips"><span class="chip2">Planning</span><span class="chip2">Space</span><span class="chip2">Defence</span></span>
@@ -2033,10 +2035,16 @@ async function bootProfile(){
   LIFE.metKurama=!!LIFE.metKurama; LIFE.metMaraReveal=!!LIFE.metMaraReveal;
   /* The move grader became deterministic (version 2). Scores built under the old, noisy ruler restart;
      win and loss records are kept. Stored stats without this flag are, by definition, from the old ruler. */
-  if(LIFE.gv!==2){
+  if(!(LIFE.gv>=2)){
     LIFE.loss=0; LIFE.moves=0; LIFE.blunders=0; LIFE.ranked.loss=0; LIFE.ranked.moves=0;
     for(const gk in LIFE.byGame){ const b=LIFE.byGame[gk]; if(b && typeof b==='object'){ b.loss=0; b.moves=0; } }
     delete LIFE.iq0; LIFE.gv=2;
+  }
+  /* version 3: the finale is no longer counted in Game IQ, so what it recorded under its old, compressed ruler is removed */
+  if(LIFE.gv===2){
+    const lk=LIFE.byGame && LIFE.byGame.laukatakati;
+    if(lk && typeof lk==='object'){ LIFE.loss=Math.max(0,(LIFE.loss||0)-(lk.loss||0)); LIFE.moves=Math.max(0,(LIFE.moves||0)-(lk.moves||0)); lk.loss=0; lk.moves=0; }
+    delete LIFE.iq0; LIFE.gv=3;
     if(st){ try{ DB.set('stats',LIFE); }catch(e){} }
   }
   paintProfile();
@@ -2548,12 +2556,7 @@ function winner(s){
   if(b<=9-TARGET) return LOW;
   if(a<=9-TARGET) return HIGH;
   if(moves(s,s.turn).length===0) return s.turn===LOW?HIGH:LOW;
-  if(s.dry>=PATIENCE){
-    if(a!==b) return a>b?LOW:HIGH;
-    const fa=freedom(s,LOW), fb=freedom(s,HIGH);
-    if(fa!==fb) return fa>fb?LOW:HIGH;
-    return s.turn===LOW?HIGH:LOW;
-  }
+  /* 35 quiet moves in a row is a DRAW, not a win for anyone, so winner() stays 0 (see winReason). */
   return 0;
 }
 /* Same exact logic as winner(), just also reporting which condition fired --
@@ -2564,12 +2567,7 @@ function winReason(s){
   if(b<=9-TARGET) return {w:LOW, reason:'material'};
   if(a<=9-TARGET) return {w:HIGH, reason:'material'};
   if(moves(s,s.turn).length===0) return {w:s.turn===LOW?HIGH:LOW, reason:'nomoves'};
-  if(s.dry>=PATIENCE){
-    if(a!==b) return {w:a>b?LOW:HIGH, reason:'patience'};
-    const fa=freedom(s,LOW), fb=freedom(s,HIGH);
-    if(fa!==fb) return {w:fa>fb?LOW:HIGH, reason:'patience'};
-    return {w:s.turn===LOW?HIGH:LOW, reason:'patience'};
-  }
+  if(s.dry>=PATIENCE) return {w:0, reason:'drought', draw:true};   /* nobody captured for 35 moves in a row */
   return {w:0, reason:null};
 }
 /* Material alone makes the AI refuse every trade and shuffle. It needs freedom
@@ -2659,7 +2657,7 @@ return{id:"laukatakati",name:"Lau Kata Kati",sub:"Bengal \u00b7 recorded 1952",c
 <li><b>A jump can chain.</b> If the piece that just landed can immediately jump again, it must keep going. It stops the moment no further jump is available from where it stands. Two or three enemy pieces can disappear in a single turn this way.</li>
 </ol>
 <p class="win"><b>Capture six of their nine pieces</b>, or leave them with no legal move of any kind.</p>
-<p class="win"><b>If 35 moves pass with nobody capturing anything, the game ends right there</b> and picks a winner on the spot: whoever has more pieces left wins. Still tied? Whoever has more open spaces next to their pieces wins. Still tied on that too? Whoever just moved wins.</p>
+<p class="win"><b>If 35 moves in a row pass with nobody capturing anything, the game is a draw.</b> Nobody can win from there, so it ends right away. The only ways to win are to capture six of their nine pieces, or to leave them with no legal move.</p>
 <p class="tip">Because a jump can never be refused, you can deliberately offer a piece: place it so that taking it forces your opponent into a spot where your next jump is already waiting.</p>`};
 })();
 
@@ -2702,6 +2700,7 @@ const LKV={
     h+='<div class="lkhint" id="lkHint"></div>';
     h+='<div class="lkscore"><div class="lks me" id="lkMe"><div class="k">You have taken</div><div class="v">0</div><div class="d">of 6</div></div>'+
        '<div class="lks them" id="lkThem"><div class="k">They have taken</div><div class="v">0</div><div class="d">of 6</div></div></div>';
+    h+='<div class="lkdry" id="lkDry"></div>';
     m.innerHTML=h;
     m.querySelectorAll('.lkp').forEach(el=>el.onclick=()=>this.tap(+el.dataset.k));
     $('lkGo').onclick=()=>{ if(this.sel!==null) this.commit(); };
@@ -2781,6 +2780,8 @@ const LKV={
     this.hint(); this.drawAcc();
   },
   hint(){
+    const dry=$('lkDry');
+    if(dry){ const dn=Math.min(35,(this.st&&this.st.dry)|0); dry.textContent=this.ended?'':('Quiet moves in a row: '+dn+' of 35. A capture resets it. At 35 the game is a draw.'); dry.classList.toggle('hot',dn>=25); }
     const h=$('lkHint'), b=$('lkGo'); if(!h) return;
     if(b) b.classList.remove('on');
     if(this.ended){ h.innerHTML='<span class="lkar">OVER</span> Tap Restart for another.'; return; }
@@ -2899,7 +2900,7 @@ const LKV={
     this.st.turn = side===LK.LOW?LK.HIGH:LK.LOW;
     this.busy=false; this.hop=null; this.draw();
     const wr=LK.winReason(this.st);
-    if(wr.w){ this.finish(wr.w, wr.reason); return; }
+    if(wr.w||wr.draw){ this.finish(wr.draw?'draw':wr.w, wr.reason); return; }
     this.maybeAI();
   },
   tap(i){
@@ -2967,38 +2968,38 @@ const LKV={
     this.ended=true; this.busy=false; this.hop=null; this.sel=null; this.chain=null; this.draw();
     stopStationTimer();
     const s=this.st;
+    const drew=(w==='draw');
+    const timedOut=(stationTimedOut && !drew);
+    if(timedOut) reason='time';
+    const foe = tableActive ? 'M\u0101ra' : (ladderStation && STATIONS[ladderStation]) ? STATIONS[ladderStation].foe : 'They';
     let msg;
-    if(stationTimedOut){
-      msg='Time\'s up. '+s.took[this.aiSide()]+' taken to '+s.took[this.mySide()]+'.';
-      session.l++; this.record(false);
+    if(drew){ msg='A draw. '+lkWhy('draw','drought'); }
+    else if(timedOut){ msg='Time\'s up. '+lkWhy('loss','time'); session.l++; this.record(false); }
+    else if(this.mode==='hot'){
+      const top=(w===LK.HIGH), win=top?'Top':'Bottom', lose=top?'Bottom':'Top';
+      msg=win+' wins. '+(reason==='nomoves' ? lose+' had no legal move left.' : win+' captured six of '+lose+'\'s nine pieces.');
     }
-    else if(this.mode==='hot') msg = w===LK.LOW?('Bottom wins, '+s.took[LK.LOW]+' taken.'):('Top wins, '+s.took[LK.HIGH]+' taken.');
-    else if(w===this.mySide()){ session.w++; msg='You win. '+s.took[w]+' taken to '+s.took[this.aiSide()]+'.'; this.record(true); }
-    else {
-      session.l++;
-      const foe = tableActive ? 'M\u0101ra' : (ladderStation && STATIONS[ladderStation]) ? STATIONS[ladderStation].foe : 'They';
-      msg=foe+' win'+(foe==='They'?'':'s')+', '+s.took[w]+' taken to '+s.took[this.mySide()]+'.';
-      this.record(false);
-    }
-    /* a material or no-legal-move outcome explains itself from the score --
-       the patience rule doesn't, since it can end a level or even 0-0 game,
-       so it's the one case that needs to say so plainly right on the board. */
-    if(reason==='patience') msg += ' Thirty-five moves, no capture \u2014 the limit decided it.';
+    else if(w===this.mySide()){ session.w++; msg='You win. '+lkWhy('win',reason); this.record(true); }
+    else { session.l++; msg=foe+' win'+(foe==='They'?'':'s')+'. '+lkWhy('loss',reason); this.record(false); }
     if(this.mode!=='hot') drawAcc();
     $('gstatus').textContent=msg;
     const h=$('lkHint'); if(h) h.innerHTML='<span class="lkar">OVER</span> '+msg;
     if(this.mode!=='hot'){
       const g=LKV.gen;
-      setTimeout(()=>{ if(g===LKV.gen){ if(tableActive) handleTableResult(w===this.mySide(),reason); else showVerdict(w===this.mySide()); } },260);
+      setTimeout(()=>{ if(g===LKV.gen){
+        if(tableActive){ if(drew) handleTableDraw(reason); else handleTableResult(w===this.mySide(),reason); }
+        else showVerdict(drew?'draw':(w===this.mySide()));
+      } },260);
     }
   },
   record(won){
     if(!LIFE.byGame['laukatakati']) LIFE.byGame['laukatakati']=blankGame();
     const bg=LIFE.byGame['laukatakati'];
     bg[won?'w':'l']++;
-    bg.loss=(bg.loss||0)+this.acc.loss; bg.moves=(bg.moves||0)+this.acc.n;
     LIFE[won?'w':'l']++;
-    LIFE.loss+=this.acc.loss; LIFE.moves+=this.acc.n; noteFirstScore();
+    /* Lau Kata Kati is deliberately NOT added to Game IQ or the skill chart. Its scoring cannot be put on the same
+       ruler as the other games: measured, even the weakest AI level scores 90 on it and the four strongest are
+       almost indistinguishable, so counting it inflated everything (a 99 right after beating Mara). Wins and losses still count. */
     paintProfile(); paintSkills(); paintGameIQ(); saveProgress();
     ladderResult(won, this.acc.loss, this.acc.n);
   },
@@ -3242,9 +3243,61 @@ function legalAll(side){
   return G.all(st,side);
 }
 
+/* ---- The strongest Brandubh AI: a real look-ahead search. ----
+   Used ONLY at the Ultimate level, and ONLY when the AI plays the king's side (the defenders), where the old one-reply-ahead AI was
+   weakest: stand-in players beat it half the time even as attackers. Measured: with this search, stand-ins won 0 of 30 games.
+   It is NOT used when the AI plays the attackers. Measured: when both sides play well the king's side wins almost every game
+   (strong search versus strong search: the defenders won 50 of 52), so the attackers cannot be made unbeatable under these rules.
+   It searches several moves deep with alpha-beta pruning, deepening one move at a time until a time budget runs out, then plays the best
+   move of the last depth it finished. Moves worth the same are picked at random so games are not identical. */
+const BR_STRONG={maxDepth:4, budgetMs:600, tie:3};   /* maxDepth is the strength dial: 2 is the old level, 3 is already very hard, 4 is harder still */
+function brStrongPick(side){
+  const t0=performance.now();
+  const A=G.sideA.key, other=function(s){ return s===A?G.sideB.key:A; };
+  const root=G.all(st,side); if(!root.length) return null;
+  let nodes=0, aborted=false;
+  const out=function(){ return BR_STRONG.budgetMs!=null && ((++nodes)&31)===0 && (performance.now()-t0)>BR_STRONG.budgetMs; };
+  function nm(b,sd,depth,alpha,beta){
+    const ms=G.all(b,sd); if(!ms.length) return -5000-depth;                 /* a side with no move loses */
+    const list=ms.map(function(m){ return {m:m, v:G.score(b,m,sd)}; }).sort(function(x,y){ return y.v-x.v; });
+    let best=-Infinity;
+    for(let i=0;i<list.length;i++){
+      const e=list[i]; let val;
+      if(e.v>=900) val=5000+depth;                                            /* wins now (sooner is better) */
+      else if(e.v<=-900) val=-5000-depth;
+      else if(depth<=1) val=e.v;                                              /* look-ahead ends: judge the position */
+      else { const nb=cpS(b); applyTo(nb,e.m); val=-nm(nb,other(sd),depth-1,-beta,-alpha); if(aborted) return 0; }
+      if(val>best) best=val; if(best>alpha) alpha=best; if(alpha>=beta) break;
+      if(out()){ aborted=true; return 0; }
+    }
+    return best;
+  }
+  const ordered=root.map(function(m){ return {m:m, v:G.score(st,m,side)}; }).sort(function(x,y){ return y.v-x.v; });
+  if(ordered[0].v>=900) return ordered[0].m;                                  /* take a win on the spot */
+  let pick=ordered.filter(function(e){ return e.v>=ordered[0].v-1e-9; });       /* depth 1 result, always available */
+  for(let d=2; d<=BR_STRONG.maxDepth; d++){
+    aborted=false; let best=-Infinity; const vals=[];
+    for(let i=0;i<ordered.length;i++){
+      const e=ordered[i]; let val;
+      if(e.v>=900) val=5000+d; else if(e.v<=-900) val=-5000-d;
+      else { const nb=cpS(st); applyTo(nb,e.m); val=-nm(nb,other(side),d-1,-Infinity,-(best-BR_STRONG.tie)); }
+      if(aborted) break;
+      vals.push([e,val]); if(val>best) best=val;
+    }
+    if(aborted && d>2) break;                                                 /* out of time: keep the last finished depth */
+    if(aborted) { /* depth 2 must always finish, so judge it without a clock */ aborted=false; BR_STRONG.__force=true; }
+    const top=vals.filter(function(x){ return x[1]>=best-BR_STRONG.tie; }).map(function(x){ return x[0]; });
+    if(vals.length===ordered.length && top.length) pick=top;
+    ordered.sort(function(x,y){ const vx=(vals.find(function(a){return a[0]===x;})||[0,-1e9])[1], vy=(vals.find(function(a){return a[0]===y;})||[0,-1e9])[1]; return vy-vx; });
+    if(best>=5000) break;                                                     /* a forced win is found: stop looking */
+  }
+  return pick[Math.floor(Math.random()*pick.length)].m;
+}
+
 /* --- AI --- */
 function aiPick(side){
   const ms=legalAll(side);if(!ms.length)return null;
+  if(G.id==='brandubh'&&diff===4&&side===G.sideB.key){ const sm=brStrongPick(side); if(sm)return sm; }   // Ultimate Brandubh, AI on the king's side: the strong search
   const arr=rank(ms,side);
   const bl=DIFF[diff].blunder;
   if(bl>0&&Math.random()<bl){
@@ -3879,6 +3932,19 @@ function resetSeason(){
 /* ---------- The Table: entry, the match itself, and both endings ---------- */
 const KURAMA_TABLE_INTRO = [ 'This is the one. No practice runs left after this.' ];
 const KURAMA_FLEE = [ 'No. No, that\'s\u2014', '...' ];
+/* One plain sentence on WHY a Lau Kata Kati game ended, so there is never any doubt about a result. */
+function lkWhy(kind, reason, inTable){
+  const tb = (inTable===undefined) ? tableActive : inTable;
+  const foe = tb ? 'M\u0101ra' : 'they', Foe = tb ? 'M\u0101ra' : 'They', his = tb ? 'his' : 'their';
+  let mine=0, theirs=0;
+  try{ const me=LKV.mySide(), them=me===LK.LOW?LK.HIGH:LK.LOW; mine=LKV.st.took[me]|0; theirs=LKV.st.took[them]|0; }catch(e){}
+  const score=' You took '+mine+', '+foe+' took '+theirs+'.';
+  if(kind==='draw') return '35 moves in a row passed with no capture, so neither side can make progress. That is a draw.'+(tb?' A draw does not use up an attempt.':'');
+  if(reason==='time') return 'Time ran out before either side captured six, so '+foe+' wins.'+score;
+  if(reason==='nomoves') return kind==='win' ? Foe+' had no legal move left, and a side that cannot move loses.'+score : 'You had no legal move left, and a side that cannot move loses.'+score;
+  return kind==='win' ? 'You captured six of '+his+' nine pieces, and capturing six wins the game.'+score : Foe+' captured six of your nine pieces, and capturing six wins the game.'+score;
+}
+const KURAMA_TABLE_DRAW = ['Neither of you broke through. That one costs you nothing. Go again when you are ready.'];
 const KURAMA_TABLE_RETRY = [
   'Four more chances this season. Use them well.',
   'Three left.',
@@ -3920,39 +3986,42 @@ function handleTableResult(won,reason){
   else { TABLE_STATE.attempts++; tableSave(); showTableLoss(reason); }
 }
 function showTableWin(reason){
-  const byPatience = reason==='patience';
   playKurama(KURAMA_FLEE, {portrait:'dismay', portraitAt:{1:'fleeing'}, askName:false, onDone:()=>{
     showMaraLine('You see me. You have defeated me. The world is yours to conquer.', {autoAdvanceMs:4200, then:()=>{
       $('mltext').textContent='';             // the line fades; the screen holds dark for the pause
       setTimeout(()=>{
-        showMaraTitle('YOU WIN', byPatience
-          ? 'Thirty-five moves passed with no capture \u2014 his own patience ran out first. M\u0101ra rises again in Season II.'
-          : 'M\u0101ra rises again in Season II.', {button:true, buttonText:'Back to the tree'});
+        showMaraTitle('YOU WIN', lkWhy('win',reason,true)+' M\u0101ra rises again in Season II.', {button:true, buttonText:'Back to the tree'});
       }, 5200);
     }});
   }});
 }
 function showTableLoss(reason){
   const n = TABLE_STATE.attempts;
-  const byPatience = reason==='patience';
-  if(n>=5){
-    playKurama(['That\'s the season. You didn\'t have it this time.', 'Back to the roots with you.'],
-      {portrait:'neutral', askName:false, onDone:()=>{
-        leaveGame();
-        tableJustLost = true;
-        goto('home');
-        openStationCard(7, document.querySelector('.tnode.maranode'));
-      }});
-  } else if(byPatience){
-    /* the only outcome that isn't self-explanatory from the score, so it
-       gets its own card rather than folding straight into the retry line. */
-    showMaraTitle('M\u0100RA WINS', 'Thirty-five moves passed with no capture \u2014 the limit decided it.', {button:true, buttonText:'Go on', onButton:()=>{
-      $('maraline').classList.remove('on');
-      playKurama([KURAMA_TABLE_RETRY[n-1]], {portrait:'neutral', askName:false, onDone:()=>{ leaveGame(); goto('home'); }});
-    }});
-  } else {
-    playKurama([KURAMA_TABLE_RETRY[n-1]], {portrait:'neutral', askName:false, onDone:()=>{ leaveGame(); goto('home'); }});
-  }
+  const after = (n>=5)
+    ? ()=>{ playKurama(['That\'s the season. You didn\'t have it this time.', 'Back to the roots with you.'],
+        {portrait:'neutral', askName:false, onDone:()=>{
+          leaveGame();
+          tableJustLost = true;
+          goto('home');
+          openStationCard(7, document.querySelector('.tnode.maranode'));
+        }}); }
+    : ()=>{ playKurama([KURAMA_TABLE_RETRY[n-1]], {portrait:'neutral', askName:false, onDone:()=>{ leaveGame(); goto('home'); }}); };
+  /* every loss says exactly why, before anything else */
+  showMaraTitle('M\u0100RA WINS', lkWhy('loss',reason,true), {button:true, buttonText:'Go on', onButton:()=>{ $('maraline').classList.remove('on'); after(); }});
+}
+/* A draw is not a loss: no attempt is used and no win or loss is recorded. */
+function handleTableDraw(reason){
+  track('mara_result', {result:'draw', reason: reason||undefined, attempt_number:__maraAttemptNum});
+  tableActive=false;
+  document.body.classList.remove('tableon');
+  Snd.stopTableDrums();
+  showTableDraw(reason);
+}
+function showTableDraw(reason){
+  showMaraTitle('A DRAW', lkWhy('draw','drought',true), {button:true, buttonText:'Go on', onButton:()=>{
+    $('maraline').classList.remove('on');
+    playKurama(KURAMA_TABLE_DRAW, {portrait:'neutral', askName:false, onDone:()=>{ leaveGame(); goto('home'); }});
+  }});
 }
 function losses(n){ return (LADDER.tries[n]||0) - (LADDER.wins[n]||0); }
 /* A rope is offered on the station you are actually stuck on: open, not yet

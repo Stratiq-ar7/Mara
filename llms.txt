@@ -12,3 +12,9 @@ MĀRA is a single-page web game. Players clear six ranked stations, each a diffe
 
 ## Pages
 - [MĀRA](https://stratiq-ar7.github.io/Mara/): the game itself — the climb, free practice for the three open games, and a Game IQ profile.
+
+## Game pages
+- [Brandubh](https://stratiq-ar7.github.io/Mara/brandubh/): rules and history, Irish tafl, c. 700 AD.
+- [Bagh Chal](https://stratiq-ar7.github.io/Mara/bagh-chal/): rules and history, Nepalese folk game.
+- [Amazons](https://stratiq-ar7.github.io/Mara/amazons/): rules and history, invented in Argentina in 1988.
+- [Unbeatable AI](https://stratiq-ar7.github.io/Mara/unbeatable-ai/): how the computer opponents play, and how Game IQ scores each of your moves against the best available move.
